@@ -1,0 +1,387 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --ink: #23203c;
+  --muted: #625d75;
+  --purple: #5841bd;
+  --line: #dedbe8;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font:
+    16px/1.5 "Inter",
+    system-ui,
+    sans-serif;
+  color: var(--ink);
+  background: #f7f7fb;
+}
+button,
+select,
+textarea {
+  font: inherit;
+}
+button,
+select,
+textarea {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: white;
+  padding: 0.55rem 0.85rem;
+}
+button {
+  cursor: pointer;
+  font-weight: 600;
+}
+button:disabled {
+  opacity: 0.52;
+  cursor: default;
+}
+button:hover:not(:disabled),
+select:hover {
+  border-color: var(--purple);
+}
+:focus-visible {
+  outline: 3px solid #7656dd;
+  outline-offset: 3px;
+}
+input {
+  accent-color: var(--purple);
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+.top {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 15px 4vw;
+  background: white;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+.brand {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 1.5rem;
+  letter-spacing: -0.06em;
+  font-weight: 750;
+  color: var(--purple);
+}
+.demo {
+  margin-left: auto;
+  font-size: 0.87rem;
+}
+.shell {
+  display: grid;
+  grid-template-columns: 236px minmax(0, 820px);
+  max-width: 1220px;
+  gap: 5vw;
+  margin: 0 auto;
+  padding: 38px 28px;
+}
+aside {
+  align-self: start;
+  position: sticky;
+  top: 28px;
+}
+.eyebrow,
+.context,
+.role span {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+.context span {
+  padding: 0 8px;
+  color: #918aa4;
+}
+h1,
+h2,
+strong,
+legend {
+  line-height: 1.25;
+}
+h1 {
+  font-size: clamp(2.1rem, 4vw, 3rem);
+  letter-spacing: -0.055em;
+  font-weight: 700;
+  margin: 14px 0 8px;
+}
+h2 {
+  font-size: 1.25rem;
+  font-weight: 680;
+  margin: 0.25rem 0 0.75rem;
+}
+small,
+.lead,
+section > p {
+  color: var(--muted);
+}
+.lead {
+  max-width: 64ch;
+  margin: 0 0 1.5rem;
+}
+.steps {
+  padding: 0;
+  margin: 25px 0;
+  list-style: none;
+}
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 3px 0;
+  padding: 11px 12px;
+  color: var(--muted);
+  border-radius: 9px;
+}
+.steps li span {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font-size: 0.8rem;
+}
+.steps li[aria-current] {
+  color: var(--purple);
+  font-weight: 650;
+  background: #ece8fb;
+}
+.steps li[aria-current] span {
+  background: var(--purple);
+  color: white;
+}
+.side-note,
+.decision,
+.actions,
+.pager,
+.confirm {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.side-note {
+  border-top: 1px solid var(--line);
+  padding: 18px 8px;
+}
+small,
+.role strong,
+.option strong,
+.side-note strong {
+  display: block;
+}
+.role-grid,
+.choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.role,
+section {
+  padding: 22px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+}
+.role {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  text-align: left;
+  gap: 8px;
+  align-content: start;
+}
+.role strong,
+.role small {
+  grid-column: span 2;
+}
+.role small {
+  font-weight: 400;
+}
+.role[aria-pressed="true"],
+.option:has(:checked) {
+  background: #f3f0ff;
+  border-color: var(--purple);
+}
+.role svg {
+  color: var(--purple);
+}
+section {
+  margin-top: 16px;
+}
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.pills li {
+  background: #f1eff7;
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 0.85rem;
+}
+.choices label,
+.option,
+.confirm {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  cursor: pointer;
+}
+.choices {
+  margin-top: 12px;
+}
+h2 small {
+  display: inline;
+  margin-left: 8px;
+  font-size: 0.9rem;
+}
+.actions {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.actions button,
+.pager button {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+.primary {
+  background: var(--purple);
+  color: white;
+  padding: 0.72rem 1.1rem;
+}
+button svg {
+  width: 19px;
+}
+.field,
+.decision label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+  margin: 12px 0;
+}
+textarea {
+  min-height: 78px;
+  font-weight: 400;
+  width: 100%;
+}
+.pager,
+.decision {
+  justify-content: space-between;
+}
+.pager {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.pager button {
+  padding: 4px 7px;
+  margin-left: 5px;
+}
+legend {
+  font-weight: 650;
+  font-size: 1.25rem;
+  margin: 14px 0;
+}
+.option {
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  margin: 7px 0;
+  align-items: flex-start;
+}
+.option input {
+  margin-top: 4px;
+}
+.option strong {
+  font-size: 0.82rem;
+  color: var(--purple);
+  margin-bottom: 3px;
+}
+.suggestion,
+.confirm {
+  padding: 14px;
+  background: #f4f1ff;
+  border-radius: 8px;
+}
+.confirm {
+  margin: 16px 0;
+}
+.decision {
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+}
+.decision label {
+  font-size: 0.8rem;
+  margin: 0;
+}
+summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.result svg,
+.result a {
+  color: var(--purple);
+}
+.result a {
+  text-decoration: underline;
+}
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .steps {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+  }
+  .steps li:not([aria-current]),
+  aside .eyebrow,
+  aside h2,
+  .side-note {
+    display: none;
+  }
+  aside {
+    position: static;
+  }
+  .decision {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 600px) {
+  .role-grid,
+  .choices {
+    grid-template-columns: 1fr;
+  }
+  .top > span:not(.demo) {
+    display: none;
+  }
+  .shell {
+    padding: 20px 12px;
+  }
+}
+.desktop-only {
+  display: none;
+}
+@media (pointer: coarse) and (max-device-width: 767px) {
+  .shell {
+    display: none;
+  }
+  .desktop-only {
+    display: block;
+    margin: 2rem;
+  }
+}

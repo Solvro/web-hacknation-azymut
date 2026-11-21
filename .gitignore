@@ -21,3 +21,6 @@ build/
 data/
 
 .DS_Store
+.pnpm-store/
+next-env.d.ts
+*.tsbuildinfo
