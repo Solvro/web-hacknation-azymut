@@ -143,6 +143,9 @@ function AssessmentEditor({
   const [justification, setJustification] = useState(
     initial?.justification ?? "",
   );
+  const [developmentNotes, setDevelopmentNotes] = useState(
+    initial?.developmentNotes ?? "",
+  );
   const [meeting, setMeeting] = useState(initial?.meeting ?? emptyMeeting);
   const [saved, setSaved] = useState(false);
   useEffect(() => {
@@ -158,6 +161,7 @@ function AssessmentEditor({
       decisions,
       interview,
       justification,
+      developmentNotes,
       meeting,
     };
     try {
@@ -178,6 +182,7 @@ function AssessmentEditor({
     decisions,
     interview,
     justification,
+    developmentNotes,
     meeting,
   ]);
   const mandatory = periodicCriteria(form);
@@ -189,6 +194,7 @@ function AssessmentEditor({
   const summaryReady =
     result.status === "scored" &&
     interview &&
+    !!developmentNotes.trim() &&
     (result.positive || !!justification.trim());
 
   function suggest(criterion: Criterion) {
@@ -527,6 +533,16 @@ function AssessmentEditor({
                     </div>
                   );
                 })}
+                <label className="field">
+                  Wnioski do indywidualnego programu rozwoju zawodowego
+                  (wymagane)
+                  <textarea
+                    required
+                    value={developmentNotes}
+                    onChange={(e) => setDevelopmentNotes(e.target.value)}
+                    placeholder="Jaką umiejętność warto rozwinąć? Jakie działanie omówiliście podczas rozmowy?"
+                  />
+                </label>
                 {result.status === "scored" && !result.positive && (
                   <label className="field">
                     Uzasadnienie oceny negatywnej (wymagane)
@@ -587,6 +603,10 @@ function AssessmentEditor({
                     <strong>{decisions[c]} pkt</strong>
                   </div>
                 ))}
+                <h3>Wnioski do indywidualnego programu rozwoju zawodowego</h3>
+                <p className="whitespace-pre-wrap wrap-anywhere">
+                  {developmentNotes}
+                </p>
                 {!result.positive && (
                   <p>
                     <strong>Uzasadnienie</strong>

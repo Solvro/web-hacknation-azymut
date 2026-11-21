@@ -22,6 +22,7 @@ const draft = {
   decisions: {},
   interview: false,
   justification: "",
+  developmentNotes: "",
   meeting: {
     date: "2024-11-21",
     assessmentDue: "2026-11-21",
@@ -64,6 +65,7 @@ test("wznawia nieukończoną rozmowę oraz kompletne podsumowanie", () => {
   const final = {
     step: 4,
     interview: true,
+    developmentNotes: "Ćwiczenie udzielania informacji zwrotnej.",
     decisions: Object.fromEntries(keys.map((key) => [key, 7])),
   };
   assert.equal(restore(final).step, 4);
@@ -72,4 +74,19 @@ test("wznawia nieukończoną rozmowę oraz kompletne podsumowanie", () => {
   assert.throws(() =>
     restore({ ...final, decisions: { ...final.decisions, analysis: 1 } }),
   );
+});
+
+test("starsze podsumowanie bez wniosków do IPRZ wraca do decyzji i zachowuje dane", () => {
+  const decisions = Object.fromEntries(keys.map((key) => [key, 7]));
+  for (const developmentNotes of [undefined, "   "]) {
+    const restored = restore({
+      step: 4,
+      interview: true,
+      decisions,
+      developmentNotes,
+    });
+    assert.equal(restored.step, 3);
+    assert.deepEqual(restored.decisions, decisions);
+    assert.deepEqual(restored.examples, draft.examples);
+  }
 });

@@ -41,6 +41,7 @@ const schema = z.object({
   decisions: z.partialRecord(criterion, points.nullable()),
   interview: z.boolean(),
   justification: z.string(),
+  developmentNotes: z.string().default(""),
   meeting,
 });
 export type PeriodicDraft = z.infer<typeof schema>;
@@ -88,6 +89,8 @@ export function readPeriodicDraft(
     ) {
       throw new Error("Niekompletne podsumowanie.");
     }
+    // Starsze szkice nie zawierały wniosków do IPRZ. Zachowaj podjęte decyzje.
+    if (!draft.developmentNotes.trim()) return { ...draft, step: 3 };
   }
   return draft;
 }
