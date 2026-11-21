@@ -1,18 +1,14 @@
 "use client";
 
+import { roleLabels, roleHome, type Role } from "../../lib/roles";
 import { useState } from "react";
 import { createAuthClient } from "better-auth/react";
 import { Compass } from "lucide-react";
 
 const auth = createAuthClient();
-const roles = {
-  supervisor: "Przełożony",
-  hr: "Kadry",
-  admin: "Administrator",
-};
 
 export function Login() {
-  const [role, setRole] = useState<keyof typeof roles>("supervisor");
+  const [role, setRole] = useState<Role>("supervisor");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -40,7 +36,7 @@ export function Login() {
               if (result.error) throw new Error();
               const response = await fetch("/api/demo", { method: "POST" });
               if (!response.ok) throw new Error();
-              window.location.assign(role === "supervisor" ? "/" : "/kadry");
+              window.location.assign(roleHome(role));
             } catch {
               setFailed(true);
             } finally {
@@ -52,9 +48,9 @@ export function Login() {
             Konto
             <select
               value={role}
-              onChange={(e) => setRole(e.target.value as keyof typeof roles)}
+              onChange={(e) => setRole(e.target.value as Role)}
             >
-              {Object.entries(roles).map(([id, label]) => (
+              {Object.entries(roleLabels).map(([id, label]) => (
                 <option key={id} value={id}>
                   {label} · {id}@azymut.example
                 </option>

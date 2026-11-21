@@ -1,12 +1,12 @@
+import { roleHome, type Role } from "../roles";
 import { redirect } from "next/navigation";
-import { demoAccess, hasDatabase, sameOrigin, type Role } from "./auth";
+import { demoAccess, hasDatabase, sameOrigin } from "./auth";
 
 export async function requireRole(allowed: Role[]) {
   if (!hasDatabase()) return null;
   const session = await demoAccess();
   if (!session) redirect("/logowanie");
-  if (!allowed.includes(session.role))
-    redirect(session.role === "supervisor" ? "/" : "/kadry");
+  if (!allowed.includes(session.role)) redirect(roleHome(session.role));
   return session;
 }
 

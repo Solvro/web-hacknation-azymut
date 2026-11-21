@@ -1,12 +1,10 @@
+import { roleLabels, type Role } from "../roles";
 import { betterAuth } from "better-auth";
 import { cookies, headers } from "next/headers";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { getPool } from "./db";
 
 const cookieName = "azymut_workspace";
-const roles = ["supervisor", "hr", "admin"] as const;
-export type Role = (typeof roles)[number];
-
 function createAuth() {
   if (!process.env.BETTER_AUTH_SECRET || !process.env.BETTER_AUTH_URL) {
     throw new Error("Ustaw BETTER_AUTH_SECRET i BETTER_AUTH_URL.");
@@ -44,7 +42,9 @@ async function workspaceCookie() {
 export async function signedInUser() {
   if (!hasDatabase()) return null;
   const session = await getAuth().api.getSession({ headers: await headers() });
-  const role = roles.find((candidate) => candidate === session?.user.role);
+  const role = (Object.keys(roleLabels) as Role[]).find(
+    (candidate) => candidate === session?.user.role,
+  );
   return session && role ? { id: session.user.id, role } : null;
 }
 

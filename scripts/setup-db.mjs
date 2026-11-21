@@ -13,15 +13,18 @@ if (!connectionString || !passphrase || passphrase.length < 12) {
 const db = new pg.Client({ connectionString });
 await db.connect();
 try {
-  await db.query(
-    await readFile(new URL("../db/001-demo.sql", import.meta.url), "utf8"),
-  );
+  for (const migration of ["001-demo.sql", "003-department-head.sql"]) {
+    await db.query(
+      await readFile(new URL("../db/" + migration, import.meta.url), "utf8"),
+    );
+  }
   const password = await hashPassword(passphrase);
   await db.query("BEGIN");
   for (const [role, name] of [
     ["supervisor", "Przełożony"],
     ["hr", "Kadry"],
     ["admin", "Administrator"],
+    ["department_head", "Kierujący komórką"],
   ]) {
     const email = role + "@azymut.example";
     const {
@@ -42,7 +45,7 @@ try {
     );
   }
   await db.query("COMMIT");
-  console.log("Schemat i trzy konta demonstracyjne są gotowe.");
+  console.log("Schemat i konta demonstracyjne są gotowe.");
 } catch (error) {
   await db.query("ROLLBACK");
   throw error;

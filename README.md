@@ -18,7 +18,7 @@ Stanowiska i ich obowiązki są syntetyczne. Szkic treningowy zapisuje się auto
 
 ## Konta i panel kadr
 
-W `.env.local` ustaw `DATABASE_URL`, `BETTER_AUTH_URL` zgodny z adresem aplikacji, losowy `BETTER_AUTH_SECRET` (minimum 32 znaki) oraz `AZYMUT_DEMO_PASSWORD` (minimum 12 znaków). Uruchom `pnpm db:setup`. Formularz logowania udostępnia trzy fikcyjne konta z jednym skonfigurowanym hasłem. Przycisk „Zmień konto” pozwala wysłać przypomnienie w roli HR i odebrać je jako przełożony w tej samej przeglądarce. Do monitorowania trafiają sprawy po kliknięciu „Zapisz sprawę”. Bez DATABASE_URL dostępny jest lokalny tryb przełożonego.
+W `.env.local` ustaw `DATABASE_URL`, `BETTER_AUTH_URL` zgodny z adresem aplikacji, losowy `BETTER_AUTH_SECRET` (minimum 32 znaki) oraz `AZYMUT_DEMO_PASSWORD` (minimum 12 znaków). Uruchom `pnpm db:setup`. Formularz logowania udostępnia cztery fikcyjne konta z jednym skonfigurowanym hasłem. Przycisk „Zmień konto” pozwala wysłać przypomnienie w roli HR i odebrać je jako przełożony w tej samej przeglądarce. Kierujący komórką może pobrać ukończoną pierwszą ocenę do podpisu. Do monitorowania trafiają sprawy po kliknięciu „Zapisz sprawę”. Bez DATABASE_URL dostępny jest lokalny tryb przełożonego.
 
 ## Asystent
 

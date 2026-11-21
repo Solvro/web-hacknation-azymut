@@ -18,3 +18,4 @@
 - Indeks 240 fragmentów można załadować do pgvector przy użyciu lokalnego modelu bge-m3. Sprawdzono zapis, ponowne indeksowanie i zapytanie kosinusowe na prawdziwym pgvector z kontrolowanym endpointem embeddingów.
 - Dodano kalkulator 30 i 7 dni na czynności rozpoczynające, standardowy cykl, przedłużenie przy ciągłej usprawiedliwionej nieobecności oraz terminy od daty zapoznania. HR widzi zapisany status zapoznania z oceną.
 - Pierwsza ocena udostępnia formularz sprawozdania z załącznika nr 3 z wyznaczonym terminem. Arkusze oceny mają tabele ocen cząstkowych z wyborem zapisanym w odpowiedniej kolumnie. Sprawdzono wydruki i pobieranie w Chrome.
+- Kierujący komórką może pobrać gotowy arkusz pierwszej oceny z tej samej sesji demonstracyjnej. W Chrome potwierdzono ograniczenie zapisu oraz warunek ukończenia sprawy.
