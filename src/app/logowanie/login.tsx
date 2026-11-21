@@ -3,7 +3,7 @@
 import { roleLabels, roleHome, type Role } from "../../lib/roles";
 import { useState } from "react";
 import { createAuthClient } from "better-auth/react";
-import { Compass } from "lucide-react";
+import { Logo } from "../logo";
 
 const auth = createAuthClient();
 
@@ -15,7 +15,7 @@ export function Login() {
   return (
     <main className="login">
       <div className="brand">
-        <Compass aria-hidden="true" /> Azymut
+        <Logo />
       </div>
       <h1>Zaloguj się do demo</h1>
       <p className="lead">

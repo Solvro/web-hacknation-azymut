@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "../../lib/server/access";
 import { firstForSignature } from "../../lib/server/first-for-signature";
+import { Logo } from "../logo";
 import { Logout } from "../logout";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +12,9 @@ export default async function SignaturePage() {
   return (
     <>
       <header className="top">
-        <div className="brand">Azymut</div>
+        <div className="brand">
+          <Logo />
+        </div>
         <span className="demo">
           <Logout />
         </span>

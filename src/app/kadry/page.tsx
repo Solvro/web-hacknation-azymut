@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "../../lib/server/access";
 import { listAudit, listCases } from "../../lib/server/cases";
+import { Logo } from "../logo";
 import { Logout } from "../logout";
 import { Remind } from "./remind";
 
@@ -30,7 +31,9 @@ export default async function HRPage() {
   return (
     <>
       <header className="top">
-        <div className="brand">Azymut</div>
+        <div className="brand">
+          <Logo />
+        </div>
         <span className="demo">
           <Logout />
         </span>

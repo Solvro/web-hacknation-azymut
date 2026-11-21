@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Compass } from "lucide-react";
+import { Logo } from "./logo";
 import { Logout } from "./logout";
 
 export function AppHeader({
@@ -12,7 +12,7 @@ export function AppHeader({
   return (
     <header className="top">
       <Link className="brand" href="/">
-        <Compass aria-hidden="true" size={30} /> Azymut
+        <Logo />
       </Link>
       {section && (
         <nav className="crumbs" aria-label="Okruszki">
