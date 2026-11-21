@@ -130,10 +130,21 @@ export async function renderAssessment({
   );
   text(!first || result.positive ? data.development || "—" : "—");
   if (!first)
-    text("Wniosek o przyznanie kolejnego stopnia służbowego: nie dołączono.");
+    text(
+      `Wniosek o przyznanie kolejnego stopnia służbowego: ${data.gradeRequest ? "dołączono" : "nie dołączono"}.`,
+    );
   heading("Potwierdzenie dokonania oceny");
   signature("Data i podpis przełożonego");
   if (first) signature("Data i podpis kierującego komórką");
   signature("Data zapoznania i podpis ocenianego");
+  if (!first && data.gradeRequest) {
+    doc.addPage();
+    heading("Część III. Wniosek o przyznanie kolejnego stopnia służbowego");
+    text(`Urzędnik służby cywilnej: ${employee} · ${position}`);
+    text("Art. 89 ust. 1 ustawy o służbie cywilnej.");
+    heading("Uzasadnienie");
+    text(data.gradeRequest);
+    signature("Data i podpis wnioskującego");
+  }
   return finish();
 }

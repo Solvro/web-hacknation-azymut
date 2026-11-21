@@ -6,6 +6,7 @@ import { Logout } from "./logout";
 
 import { AssistantPanel } from "./assistant-panel";
 
+import { trainingAssessment } from "../lib/drafts/demo";
 import { CriterionSuggestion } from "./criterion-suggestion";
 
 import {
@@ -139,6 +140,12 @@ export function PeriodicWorkspace({
       storageKey={storageKey}
       revision={revision}
       setRevision={setRevision}
+      onSample={() => {
+        setInitial(trainingAssessment(model));
+        setNotice("Otwarto sprawę szkoleniową.");
+        setGeneration((value) => value + 1);
+        window.scrollTo(0, 0);
+      }}
       onRestart={() => {
         if (!window.confirm("Rozpocząć nową ocenę i usunąć szkic z tej karty?"))
           return;
@@ -166,6 +173,7 @@ function AssessmentEditor({
   revision,
   setRevision,
   onRestart,
+  onSample,
 }: {
   model: CompetencyModel;
   initial: PeriodicDraft | null;
@@ -176,6 +184,7 @@ function AssessmentEditor({
   revision: number;
   setRevision: (value: number) => void;
   onRestart: () => void;
+  onSample: () => void;
 }) {
   const [form, setForm] = useState<PeriodicForm>(initial?.form ?? "B");
   const [extra, setExtra] = useState<Criterion[]>(initial?.extra ?? []);
@@ -198,11 +207,16 @@ function AssessmentEditor({
   const [developmentNotes, setDevelopmentNotes] = useState(
     initial?.developmentNotes ?? "",
   );
+  const [civilServant, setCivilServant] = useState(
+    initial?.civilServant ?? false,
+  );
+  const [gradeRequest, setGradeRequest] = useState(initial?.gradeRequest ?? "");
   const [acknowledged, setAcknowledged] = useState(initial?.acknowledged ?? "");
   const [meeting, setMeeting] = useState(initial?.meeting ?? emptyMeeting);
   const [saved, setSaved] = useState(false);
   const draft: PeriodicDraft = {
     version: model.version,
+    sample: initial?.sample,
     form,
     extra,
     step,
@@ -214,6 +228,8 @@ function AssessmentEditor({
     interview,
     justification,
     developmentNotes,
+    civilServant,
+    gradeRequest,
     acknowledged,
     meeting,
   };
@@ -301,6 +317,13 @@ function AssessmentEditor({
             Ocena okresowa <span>/</span> Krok {step + 1} z {steps.length}
           </div>
           <h1>{steps[step]}</h1>
+          {draft.sample && (
+            <p className="confirm">
+              Sprawa szkoleniowa. Cztery decyzje wpisał fikcyjny przełożony.
+              Uzupełnij obserwację, przejdź przez rozmowę i wybierz ocenę
+              zarządzania ludźmi.
+            </p>
+          )}
           {step === 0 && (
             <>
               <p className="lead">
@@ -367,6 +390,9 @@ function AssessmentEditor({
               <div className="actions">
                 <button className="primary" onClick={() => go(1)}>
                   Przejdź do rozmowy rozpoczynającej <ArrowRight />
+                </button>
+                <button type="button" onClick={onSample}>
+                  Otwórz sprawę szkoleniową
                 </button>
               </div>
             </>
@@ -581,6 +607,33 @@ function AssessmentEditor({
                     />
                   </label>
                 )}
+                {result.status === "scored" && result.positive && (
+                  <details>
+                    <summary>Wniosek o kolejny stopień służbowy</summary>
+                    <label className="confirm">
+                      <input
+                        type="checkbox"
+                        checked={civilServant}
+                        onChange={(e) => setCivilServant(e.target.checked)}
+                      />
+                      Oceniany jest urzędnikiem służby cywilnej.
+                    </label>
+                    {civilServant && (
+                      <label className="field">
+                        Uzasadnienie wniosku (opcjonalnie)
+                        <textarea
+                          maxLength={4000}
+                          value={gradeRequest}
+                          onChange={(e) => setGradeRequest(e.target.value)}
+                        />
+                      </label>
+                    )}
+                    <p>
+                      Jeżeli dołączasz wniosek, opisz jego podstawę. Uzupełniony
+                      wniosek trafi do części III arkusza.
+                    </p>
+                  </details>
+                )}
               </section>
               <div className="actions">
                 <button onClick={() => go(2)}>Wróć do obserwacji</button>
@@ -658,6 +711,9 @@ function AssessmentEditor({
                   decisions,
                   justification,
                   development: developmentNotes,
+                  civilServant: result.positive && civilServant,
+                  gradeRequest:
+                    result.positive && civilServant ? gradeRequest : "",
                 }}
               >
                 <label className="field">

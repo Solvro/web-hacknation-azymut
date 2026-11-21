@@ -34,6 +34,7 @@ const meeting = z.object({
 });
 const schema = z.object({
   version: z.string(),
+  sample: z.literal("training").optional(),
   form: z.enum(["B", "C"]),
   extra: z.array(criterion).max(3),
   step: z.int().min(0).max(4),
@@ -48,6 +49,8 @@ const schema = z.object({
   interview: z.boolean(),
   justification: z.string(),
   developmentNotes: z.string().default(""),
+  civilServant: z.boolean().optional(),
+  gradeRequest: z.string().max(4000).optional(),
   acknowledged: z.union([z.iso.date(), z.literal("")]).optional(),
   meeting,
 });

@@ -24,6 +24,8 @@ const periodic = z
     decisions: z.partialRecord(criterion, z.literal([1, 3, 5, 7, 9])),
     justification: note,
     development: note.min(1),
+    civilServant: z.boolean().default(false),
+    gradeRequest: note.max(4000).default(""),
   })
   .refine(
     (data) =>
@@ -75,6 +77,15 @@ export function prepareAssessment(raw: unknown) {
   if (result.status !== "scored" || (!result.positive && !data.justification)) {
     throw new Error(
       "Arkusz wymaga kompletu decyzji i uzasadnienia oceny negatywnej.",
+    );
+  }
+  if (
+    data.form !== "first" &&
+    data.gradeRequest &&
+    (!data.civilServant || !result.positive)
+  ) {
+    throw new Error(
+      "Wniosek wymaga pozytywnej oceny urzędnika służby cywilnej.",
     );
   }
   const keys =
