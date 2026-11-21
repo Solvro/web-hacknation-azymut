@@ -8,13 +8,14 @@ import {
   maxNoteLength,
   maxNotesPerBatch,
   maxSavedNotes,
+  observationDate,
   splitNotes,
   type NoteSuggestion,
   type SavedNote,
 } from "../lib/observations/notes";
 import { criteria, periodicCriteria, type Criterion, type PeriodicForm } from "../lib/scoring/periodic";
 
-type Review = NoteSuggestion & { text: string };
+type Review = NoteSuggestion & { text: string; date?: string };
 
 const sampleNotes = [
   "Kierująca rozdzieliła części raportu między członków zespołu i ustaliła, kto odpowiada za zebranie danych. Raport powstał na czas.",
@@ -143,9 +144,18 @@ export function ObservationInbox({
                     ))}
                   </select>
                 </label>
+                <label className="field observation-date">
+                  Data obserwacji (opcjonalnie)
+                  <input type="date" value={item.date ?? ""} onChange={(event) => {
+                    const date = observationDate.safeParse(event.target.value);
+                    if (date.success) setReviews((previous) => previous.map((entry) => entry.index === item.index
+                      ? { ...entry, date: date.data }
+                      : entry));
+                  }} />
+                </label>
                 <div className="actions">
                   <button type="button" disabled={savedCount >= maxSavedNotes} onClick={() => {
-                    onSave({ id: crypto.randomUUID(), text: item.text, indicatorId: item.indicatorId, gap: item.gap });
+                    onSave({ id: crypto.randomUUID(), text: item.text, date: item.date || undefined, indicatorId: item.indicatorId, gap: item.gap });
                     setReviews((previous) => previous.filter(({ index }) => index !== item.index));
                     setMessage(item.indicatorId ? "Zapisano przykład przy wskaźniku." : "Zapisano kwestię do rozmowy.");
                   }}>

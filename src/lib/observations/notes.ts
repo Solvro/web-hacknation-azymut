@@ -3,6 +3,7 @@ import { z } from "zod";
 export const maxNoteLength = 700;
 export const maxNotesPerBatch = 8;
 export const maxSavedNotes = 80;
+export const observationDate = z.union([z.iso.date(), z.literal("")]);
 export const noteText = z.string().trim().min(3).max(maxNoteLength);
 
 const gap = z.enum(["situation", "action", "result", "context"]);
@@ -19,6 +20,7 @@ export type NoteSuggestion = z.infer<typeof noteSuggestion>;
 export const savedNote = z.object({
   id: z.uuid(),
   text: noteText,
+  date: observationDate.optional(),
   indicatorId: z.string().max(80).nullable(),
   gap: gap.nullable(),
 });

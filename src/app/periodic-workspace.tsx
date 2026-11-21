@@ -9,7 +9,10 @@ import { AssistantPanel } from "./assistant-panel";
 import { trainingAssessment } from "../lib/drafts/demo";
 import { CriterionSuggestion } from "./criterion-suggestion";
 import { ObservationInbox } from "./observation-inbox";
-import { gapQuestions, type SavedNote } from "../lib/observations/notes";
+import { ObservationJournal } from "./observation-journal";
+import { ConversationAgenda } from "./conversation-agenda";
+import { buildConversationAgenda } from "../lib/observations/agenda";
+import { gapQuestions, observationDate, type SavedNote } from "../lib/observations/notes";
 
 import {
   emptyMeeting,
@@ -260,6 +263,7 @@ function AssessmentEditor({
   const key = selected[active];
   const indicators = model.competencies[key];
   const indicator = indicators[index];
+  const agenda = buildConversationAgenda(model, selected, notes, examples, ratings);
   const result = periodicResult(form, extra, decisions);
   const summaryReady =
     result.status === "scored" &&
@@ -460,6 +464,22 @@ function AssessmentEditor({
                   if (note.indicatorId) openIndicator(note.indicatorId);
                 }}
               />
+              {notes.length > 0 && (
+                <ObservationJournal
+                  notes={notes}
+                  labels={new Map(selected.flatMap((criterion) =>
+                    model.competencies[criterion].map(({ id, label }) => [id, label] as const),
+                  ))}
+                  onDate={(id, value) => {
+                    const date = observationDate.safeParse(value);
+                    if (date.success) setNotes((previous) => previous.map((note) =>
+                      note.id === id ? { ...note, date: date.data || undefined } : note,
+                    ));
+                  }}
+                  onDelete={(id) => setNotes((previous) => previous.filter((note) => note.id !== id))}
+                  onOpen={openIndicator}
+                />
+              )}
               <section>
                 <label className="field">
                   Kryterium
@@ -499,7 +519,10 @@ function AssessmentEditor({
                   <legend ref={indicatorHeading} tabIndex={-1}>{indicator.label}</legend>
                   {notes.filter(({ indicatorId }) => indicatorId === indicator.id).map((note) => (
                     <article key={note.id} className="observation-card">
-                      <p className="observation-original">{note.text}</p>
+                      <p className="observation-original">
+                        {note.date && <small><time dateTime={note.date}>{note.date}</time></small>}
+                        {note.text}
+                      </p>
                       {note.gap && <p>{gapQuestions[note.gap]}</p>}
                     </article>
                   ))}
@@ -558,7 +581,7 @@ function AssessmentEditor({
               </section>
               <div className="actions">
                 <button className="primary" onClick={() => go(3)}>
-                  Przejdź do rozmowy <ArrowRight />
+                  Przygotuj rozmowę <ArrowRight />
                 </button>
               </div>
             </>
@@ -569,29 +592,14 @@ function AssessmentEditor({
                 Omów z pracownikiem zadania, cele i potrzeby rozwojowe.
                 Następnie wybierz ocenę każdego kryterium.
               </p>
+              <ConversationAgenda
+                agenda={agenda}
+                expectations={meeting.expectations}
+                goals={meeting.goals}
+                onOpen={openIndicator}
+              />
               <section>
-                <details>
-                  <summary>Ustalenia z rozmowy rozpoczynającej</summary>
-                  <MeetingSummary meeting={meeting} />
-                </details>
-                <details>
-                  <summary>Przykłady do rozmowy</summary>
-                  {selected
-                    .flatMap((c) => model.competencies[c])
-                    .filter((item) => examples[item.id]?.trim()).length ===
-                    0 && <p>Brak zapisanych przykładów.</p>}
-                  {selected.map((c) =>
-                    model.competencies[c]
-                      .filter((item) => examples[item.id]?.trim())
-                      .map((item) => (
-                        <p key={item.id}>
-                          <strong>{criteria[c]}</strong> · {item.label}
-                          <br />
-                          {examples[item.id]}
-                        </p>
-                      )),
-                  )}
-                </details>
+                <h2>Rozmowa i decyzje</h2>
                 <label className="confirm">
                   <input
                     type="checkbox"
@@ -796,13 +804,12 @@ function AssessmentEditor({
           )}
           <AssistantPanel
             scope="periodic"
-            evidence={selected
-              .flatMap((c) => model.competencies[c])
-              .filter((item) => examples[item.id]?.trim())
-              .map((item) => ({
-                label: item.label.slice(0, 300),
-                text: examples[item.id].trim().slice(0, 1000),
-              }))}
+            evidence={agenda.criteria.flatMap(({ indicators }) =>
+              indicators.flatMap(({ label, evidence }) => evidence.map(({ text }) => ({
+                label: label.slice(0, 300),
+                text: text.slice(0, 1000),
+              }))),
+            ).slice(0, 8)}
           />
         </main>
       </div>

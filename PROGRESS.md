@@ -1,5 +1,7 @@
 # Postęp Azymutu
 
+- 21 listopada — dodano dziennik z opcjonalnymi datami oraz agendę z oczekiwaniami, pytaniami, pokryciem wskaźników i rozkładem po miesiącach. W Chrome sprawdzono wznowienie agendy, przejście do wskaźnika, aktualizację po edycji daty i przejście do PDF po jawnej decyzji 9 pkt (średnia 6,2). Pobierany PDF zawiera wniosek rozwojowy, a surowa notatka pozostaje w szkicu. Przeszło 29 testów i kontrola typów.
+
 - 21 listopada — dodano analizę notatek okresowych, zweryfikowane cytaty i ręczne przypisanie z przejściem do wskaźnika. Gemma 4 12B na stacji Solvro poprawnie dopasowała dwa przykłady i rozpoznała brak konkretu w trzecim (ok. 2,7 s od żądania w tej próbie). W Chrome z kontrolowanym modelem sprawdzono zmianę dopasowania, zachowanie pustego pola punktacji, wznowienie szkicu, odrzucenie zmyślonego cytatu i ręczne przypisanie po awarii. Przeszło 27 testów i kontrola typów.
 
 - 21 listopada — uzgodniono iteracje, które rozszerzają ocenę okresową o analizę notatek, dziennik i agendę, analizę OSP oraz kolejkę kadr z automatycznym przypomnieniem. Zaktualizowano warunki odbioru i scenariusz demo w CONCEPT.md.
