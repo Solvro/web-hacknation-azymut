@@ -432,3 +432,35 @@ summary {
   align-items: flex-start;
   flex-wrap: wrap;
 }
+
+.assistant-panel form small {
+  margin-bottom: 0.55rem;
+}
+.assistant-panel article {
+  border-top: 1px solid var(--line);
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+.assistant-panel article h3 {
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.assistant-panel article p,
+.assistant-panel article details {
+  margin-top: 0.55rem;
+}
+.assistant-panel article blockquote {
+  padding: 0.5rem 0.9rem;
+  border-left: 3px solid var(--line);
+}
+.assistant-panel article a {
+  color: var(--purple);
+  text-decoration: underline;
+}
+.assistant-modes {
+  justify-content: flex-start;
+}
+.assistant-modes button[aria-pressed="true"] {
+  background: #ece8fb;
+  border-color: var(--purple);
+}

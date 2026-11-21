@@ -10,9 +10,12 @@
     "dev": "python3 scripts/import-model.py && next dev",
     "build": "python3 scripts/import-model.py && next build --webpack",
     "start": "next start",
+    "knowledge:import": "python3 scripts/import-model.py && uv run --script scripts/import-knowledge.py",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/openai-compatible": "^3.0.93",
+    "ai": "^7.0.177",
     "lucide-react": "^1.77.0",
     "next": "^16.4.6",
     "pdfkit": "^0.21.0",

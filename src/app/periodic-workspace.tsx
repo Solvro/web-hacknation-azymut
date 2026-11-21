@@ -1,5 +1,7 @@
 "use client";
 
+import { AssistantPanel } from "./assistant-panel";
+
 import { CriterionSuggestion } from "./criterion-suggestion";
 
 import {
@@ -636,6 +638,16 @@ function AssessmentEditor({
               </div>
             </>
           )}
+          <AssistantPanel
+            scope="periodic"
+            evidence={selected
+              .flatMap((c) => model.competencies[c])
+              .filter((item) => examples[item.id]?.trim())
+              .map((item) => ({
+                label: item.label.slice(0, 300),
+                text: examples[item.id].trim().slice(0, 1000),
+              }))}
+          />
         </main>
       </div>
     </>

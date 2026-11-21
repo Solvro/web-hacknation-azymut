@@ -12,3 +12,4 @@
 - 21 listopada — ekran obserwacji i etap decyzji wyjaśniają sugestię dla każdego kryterium: wskazują wybrane zachowania, pominięte wskaźniki, średnią, rozstrzygnięcie remisu lub powód braku sugestii.
 - Dodano ścieżkę pierwszej oceny z terminami, sprawozdaniem, egzaminem, obserwacjami i decyzjami w skali 3/5/7.
 - Dodano serwerowy eksport PDF pierwszej oceny oraz arkuszy B/C, z walidacją danych i ponownym obliczeniem wyniku na serwerze.
+- Asystent zasad i rozmowy korzysta z indeksu lokalnych materiałów i sprawdza wszystkie cytaty przed pokazaniem odpowiedzi. Ekran rozróżnia brak podstawy, niepoprawne cytaty i awarię modelu.

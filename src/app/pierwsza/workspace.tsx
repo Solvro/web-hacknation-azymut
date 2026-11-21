@@ -1,5 +1,7 @@
 "use client";
 
+import { AssistantPanel } from "../assistant-panel";
+
 import Link from "next/link";
 import { AssessmentDownload } from "../assessment-download";
 import { useState } from "react";
@@ -570,6 +572,16 @@ export function FirstWorkspace({ model }: { model: CompetencyModel }) {
               </div>
             </>
           )}
+          <AssistantPanel
+            scope="first"
+            evidence={firstCriteria
+              .flatMap((c) => model.competencies[c])
+              .filter((item) => examples[item.id]?.trim())
+              .map((item) => ({
+                label: item.label.slice(0, 300),
+                text: examples[item.id].trim().slice(0, 1000),
+              }))}
+          />
         </main>
       </div>
     </>

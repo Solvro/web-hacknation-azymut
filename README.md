@@ -14,8 +14,12 @@ Otwórz [localhost:3000](http://localhost:3000). Start i budowanie aplikacji imp
 
 ## Zakres tej wersji
 
-Stanowiska i ich obowiązki są syntetyczne. Szkic treningowy zapisuje się automatycznie w pamięci sesji karty. Po odświeżeniu wracają wybrany wskaźnik, obserwacje, decyzje i ustalenia rozmowy. Przycisk „Rozpocznij nową ocenę” pozwala usunąć bieżący szkic. Z podsumowania można pobrać arkusz B, C lub pierwszej oceny w PDF z danymi demonstracyjnymi i miejscami na podpis. PDF odwzorowuje główne części wzorów. Wniosek o kolejny stopień służbowy pozostaje poza zakresem eksportu prototypu. Noto Sans jest dołączony na licencji OFL. Zapis spraw na serwerze, konta, panel HR i czat są zaplanowane w [koncepcji](CONCEPT.md).
+Stanowiska i ich obowiązki są syntetyczne. Szkic treningowy zapisuje się automatycznie w pamięci sesji karty. Po odświeżeniu wracają wybrany wskaźnik, obserwacje, decyzje i ustalenia rozmowy. Przycisk „Rozpocznij nową ocenę” pozwala usunąć bieżący szkic. Z podsumowania można pobrać arkusz B, C lub pierwszej oceny w PDF z danymi demonstracyjnymi i miejscami na podpis. PDF odwzorowuje główne części wzorów. Wniosek o kolejny stopień służbowy pozostaje poza zakresem eksportu prototypu. Noto Sans jest dołączony na licencji OFL. Zapis spraw na serwerze, konta, panel HR są zaplanowane w [koncepcji](CONCEPT.md).
+
+## Asystent
+
+Uruchom `pnpm knowledge:import` z zainstalowanym uv i dokumentami z katalogu `materials/`. W `.env.local` ustaw `AZYMUT_MODEL_URL` (np. `http://127.0.0.1:11434/v1`) i `AZYMUT_MODEL_NAME` (np. `qwen3:8b`). Prototyp zakłada prywatny serwer Ollama lub vLLM z otwartym modelem. Bez działającego modelu aplikacja zgłasza awarię i pokazuje pasujące źródła.
 
 ## Gdzie użyto AI
 
-Claude Code i Codex pomagały opracować koncepcję. Codex pomagał przy implementacji i testach. W tej wersji aplikacja wykonuje obliczenia deterministycznie. Opisy zachowań pochodzą z materiałów MC.
+Claude Code i Codex pomagały opracować koncepcję. Codex pomagał przy implementacji i testach. Model generuje objaśnienia proceduralne i propozycje pytań do rozmowy na podstawie źródeł. Punktacja i terminy są obliczane deterministycznie. Opisy zachowań pochodzą z materiałów MC.
