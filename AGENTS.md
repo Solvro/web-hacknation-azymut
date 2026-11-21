@@ -116,3 +116,4 @@ Wszystkie linki muszą działać bez dodatkowych uprawnień.
 2. Krótkie notatki postępu w `PROGRESS.md`.
 3. Scenariusz demo z czasami i planem awaryjnym (dane seed, tryb offline dla asystenta z nagranymi odpowiedziami jest **wyłącznie planem B** i musi być oznaczony).
 4. Na końcu README: uruchomienie jedną komendą, lista modeli, usług i licencji, **lista rzeczy zamockowanych**, sekcja „gdzie użyto AI”.
+5. Pracę dzielimy na małe, spójne iteracje. Po sprawdzeniu każdej iteracji od razu tworzymy commit i wypychamy wszystkie lokalne commity bieżącej gałęzi na `origin`.
