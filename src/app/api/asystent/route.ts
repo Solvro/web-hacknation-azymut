@@ -217,6 +217,7 @@ async function answerQuestion(
       model: provider.chatModel(process.env.AZYMUT_MODEL_NAME),
       output: Output.object({ schema: outputSchema }),
       providerOptions:
+        process.env.AZYMUT_MODEL_NAME === "gemma4:12b" ||
         process.env.AZYMUT_DISABLE_REASONING === "1"
           ? { azymutInternal: { reasoningEffort: "none" } }
           : undefined,
