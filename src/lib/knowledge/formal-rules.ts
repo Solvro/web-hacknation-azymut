@@ -16,6 +16,17 @@ const rules = [
   },
   {
     match: (q: string) =>
+      /kryteri/.test(q) &&
+      /zmian\w* (?:na stanowisku )?(?:oceniajac|przelozon)|(?:zmienia sie|zmienil sie) (?:oceniajac|przelozon)|(?:oceniajac|przelozon)\w* (?:sie zmienia|zmienia sie|zmienil sie)/.test(q),
+    scope: "periodic",
+    prefix: "r2016",
+    locator: "§ 9 ust. 3",
+    anchor: "ocena jest sporządzana na podstawie wybranych wcześniej kryteriów",
+    answer:
+      "Jeżeli w trakcie okresu oceny zmienia się oceniający, ocenę sporządza się według kryteriów wybranych wcześniej. Podstawa to § 9 ust. 3 rozporządzenia.",
+  },
+  {
+    match: (q: string) =>
       /czastkow|trojk/.test(q) &&
       /\bdwie\b|\bdwoch\b|\b2\b/.test(q) &&
       /\b3\b|trojk/.test(q) &&

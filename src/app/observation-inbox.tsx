@@ -18,7 +18,7 @@ import { criteria, periodicCriteria, type Criterion, type PeriodicForm } from ".
 type Review = NoteSuggestion & { text: string; date?: string };
 
 const sampleNotes = [
-  "Kierująca rozdzieliła części raportu między członków zespołu i ustaliła, kto odpowiada za zebranie danych. Raport powstał na czas.",
+  "Gdy zespół stracił zapał do pracy nad raportem, kierująca zachęciła pracowników do jego dokończenia. Pokazała, jak ich raport pomoże innym wydziałom. Członkowie zespołu wrócili do zadania i oddali raport na czas.",
   "Kiedy zabrakło danych z jednego wydziału, kierująca zorganizowała wcześniejszy przegląd. Braki uzupełniono przed wysłaniem raportu.",
   "Kierująca zbyt rzadko daje zespołowi informację zwrotną.",
 ].join("\n\n");
@@ -28,6 +28,7 @@ export function ObservationInbox({
   form,
   extra,
   sample,
+  hidden,
   savedCount,
   onSave,
 }: {
@@ -35,6 +36,7 @@ export function ObservationInbox({
   form: PeriodicForm;
   extra: Criterion[];
   sample: boolean;
+  hidden: boolean;
   savedCount: number;
   onSave: (note: SavedNote) => void;
 }) {
@@ -86,7 +88,7 @@ export function ObservationInbox({
   }
 
   return (
-    <section className="observation-inbox">
+    <section className="observation-inbox" hidden={hidden}>
       <h2>Dodaj notatki z pracy</h2>
       <label className="field">
         <span>Opisz konkretne sytuacje. Oddziel notatki pustą linią i używaj wyłącznie danych fikcyjnych.</span>

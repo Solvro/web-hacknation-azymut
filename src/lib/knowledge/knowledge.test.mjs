@@ -76,3 +76,18 @@ test("objaśnia skutki podanej oceny 1 pkt tylko dla okresowej i z właściwą j
     null,
   );
 });
+
+test("przy zmianie oceniającego zachowuje kryteria wybrane przed zmianą", () => {
+  const source = {
+    ...art,
+    id: "r2016-21",
+    locator: "§ 9 ust. 3",
+    text: "W przypadku zmiany na stanowisku oceniającego w trakcie okresu, w którym oceniany podlega ocenie, ocena jest sporządzana na podstawie wybranych wcześniej kryteriów.",
+  };
+  const question = "Gdy oceniający zmienia się w trakcie cyklu, czy zostają dotychczasowe kryteria?";
+  const result = formalRuleAnswer(question, "periodic", [source]);
+  assert.match(result.answer, /wybranych wcześniej/);
+  assert.equal(result.sources[0].locator, source.locator);
+  assert.equal(formalRuleAnswer(question, "first", [source]), null);
+  assert.equal(formalRuleAnswer("Jakie kryteria po zmianie stanowiska pracownika?", "periodic", [source]), null);
+});

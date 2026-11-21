@@ -499,17 +499,24 @@ function AssessmentEditor({
                   </ul>
                 </section>
               )}
-              <ObservationInbox
-                model={model}
-                form={form}
-                extra={extra}
-                sample={initial?.sample === "training"}
-                savedCount={notes.length}
-                onSave={(note) => {
-                  setNotes((previous) => [...previous, note]);
-                  if (note.indicatorId) openIndicator(note.indicatorId);
-                }}
-              />
+            </>
+          )}
+          {step >= 2 && (
+            <ObservationInbox
+              model={model}
+              form={form}
+              extra={extra}
+              sample={initial?.sample === "training"}
+              hidden={step !== 2}
+              savedCount={notes.length}
+              onSave={(note) => {
+                setNotes((previous) => [...previous, note]);
+                if (note.indicatorId) openIndicator(note.indicatorId);
+              }}
+            />
+          )}
+          {step === 2 && (
+            <>
               {notes.length > 0 && (
                 <ObservationJournal
                   notes={notes}

@@ -28,7 +28,7 @@ Przypomnienie o czynności z terminem w ciągu siedmiu dni trafia do skrzynki pr
 
 Uruchom `pnpm knowledge:import` z zainstalowanym uv i dokumentami z katalogu `materials/`. W `.env.local` ustaw `AZYMUT_MODEL_URL` (np. `http://127.0.0.1:11434/v1`) i `AZYMUT_MODEL_NAME` (np. `gemma4:12b`). Prototyp zakłada prywatny serwer Ollama lub vLLM z otwartym modelem. Bez działającego modelu aplikacja zgłasza awarię i pokazuje pasujące źródła.
 
-Do wyszukiwania wektorowego ustaw `AZYMUT_EMBED_URL` i `AZYMUT_EMBED_NAME=bge-m3` oraz użyj PostgreSQL z rozszerzeniem pgvector. Po imporcie uruchom `pnpm knowledge:index`. Wyszukiwanie łączy dopasowanie tekstowe z podobieństwem wektorowym. Dla czterech jednoznacznych pytań o warunki z rozporządzeń asystent pokazuje oznaczoną odpowiedź z reguły i cytat. Pozostałe pytania obsługuje model. Bez indeksu lub dostępnego endpointu embeddingów działa wyszukiwanie tekstowe.
+Do wyszukiwania wektorowego ustaw `AZYMUT_EMBED_URL` i `AZYMUT_EMBED_NAME=bge-m3` oraz użyj PostgreSQL z rozszerzeniem pgvector. Po imporcie uruchom `pnpm knowledge:index`. Wyszukiwanie łączy dopasowanie tekstowe z podobieństwem wektorowym. Dla wybranych jednoznacznych pytań o warunki z rozporządzeń asystent pokazuje oznaczoną odpowiedź z reguły i cytat. Pozostałe pytania obsługuje model. Bez indeksu lub dostępnego endpointu embeddingów działa wyszukiwanie tekstowe.
 
 Do samodzielnego sprawdzianu użyj `AZYMUT_EVAL_URL=http://127.0.0.1:3000 pnpm eval` na uprawnionej instancji testowej. Gdy instancja wymaga logowania, podaj w prywatnym środowisku procesu `AZYMUT_EVAL_COOKIE` z aktywnej sesji przełożonego. Skrypt sprawdza podstawowe elementy odpowiedzi i oczekiwane jednostki redakcyjne. Wyniki wymagają też oceny merytorycznej.
 
