@@ -63,6 +63,8 @@ Z grafiki partnera zachowujemy dwa wejścia, nazwy modułów oraz niebieski akce
 
 ## Asystent, któremu juror zada własne pytanie
 
+- **Czat.** Na osobnej stronie i w panelu przy sprawie pytania oraz odpowiedzi układają się w dymki. Podpowiedzi zależą od rodzaju oceny i tematu. W trakcie wyszukiwania i generowania czat pokazuje etap pracy, a po sprawdzeniu cytatów wyświetla tekst strumieniowo wraz ze źródłami. Można zatrzymać odpowiedź, ponowić przerwane pytanie i wrócić do rozmowy w otwartym widoku. Przykłady z oceny są używane w trybie przygotowania do rozmowy.
+
 - **Formalny.** Wybór ścieżki zawęża wyszukiwanie. Przepisy dzielimy według art./§, ustępu i punktu, z zachowaniem wyjątków i odsyłaczy. Poradniki mają numery stron, model identyfikatory wskaźników, przygotowane przez zespół FAQ odsyła do aktu. Przy rozbieżności z poradnikiem z 2016 r. pierwszeństwo ma obowiązujący przepis. Pytanie niejednoznaczne, np. „Ile mam czasu?”, wymaga ustalenia czynności i rodzaju oceny.
 - **Rozmowy.** Przedstawia pytania i zagadnienia na podstawie OSP, potwierdzonych obserwacji oraz wskazówek z poradnika. Twierdzenia o pracowniku muszą wskazywać wpisany przykład. Pytania i propozycje rozwoju oznaczamy jako propozycje. Gdy wpisano „mało zaangażowana”, asystent prosi o konkretną sytuację i jej rezultat. Nie dopisuje zachowania ani nie przypisuje pracownikowi poziomu.
 - **Wyszukiwanie.** Zacząć od wyszukiwania pełnotekstowego Postgresa, dokładnych odwołań do przepisów i FAQ. Następnie dodać lokalne embeddingi bge-m3 na CPU i pgvector, łącząc wyniki według pozycji w obu listach. Dokumenty źródłowe są danymi. Model otrzymuje tylko wybrane fragmenty i dozwolone identyfikatory.
