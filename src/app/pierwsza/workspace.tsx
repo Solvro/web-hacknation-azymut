@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AssessmentDownload } from "../assessment-download";
 import { useState } from "react";
 import { Compass } from "lucide-react";
 import type { CompetencyModel } from "../../lib/drafts/periodic";
@@ -548,6 +549,22 @@ export function FirstWorkspace({ model }: { model: CompetencyModel }) {
                   </p>
                 )}
               </section>
+              <AssessmentDownload
+                form="first"
+                payload={{
+                  employmentStart: start,
+                  opening,
+                  reportFrom,
+                  reportDue,
+                  ...windowDates,
+                  conversation,
+                  exam,
+                  report,
+                  decisions,
+                  justification,
+                  development,
+                }}
+              />
               <div className="actions">
                 <button onClick={() => go(3)}>Wróć do decyzji</button>
               </div>

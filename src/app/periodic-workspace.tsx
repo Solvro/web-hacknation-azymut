@@ -8,6 +8,7 @@ import {
   OpeningMeetingForm,
 } from "./opening-meeting";
 import Link from "next/link";
+import { AssessmentDownload } from "./assessment-download";
 import { useEffect, useState } from "react";
 import {
   draftStorageKey,
@@ -599,6 +600,35 @@ function AssessmentEditor({
                   </p>
                 )}
               </section>
+              <AssessmentDownload
+                form={form}
+                payload={{
+                  extra,
+                  opening: meeting.date,
+                  assessmentDue: meeting.assessmentDue,
+                  decisions,
+                  justification,
+                  development: developmentNotes,
+                }}
+              >
+                <label className="field">
+                  Początek ocenianego okresu
+                  <input required name="periodFrom" type="date" />
+                </label>
+                <label className="field">
+                  Koniec ocenianego okresu
+                  <input required name="periodTo" type="date" />
+                </label>
+                <label className="field">
+                  Data rozmowy oceniającej
+                  <input
+                    required
+                    name="conversation"
+                    type="date"
+                    min={meeting.date}
+                  />
+                </label>
+              </AssessmentDownload>
               <div className="actions">
                 <button onClick={() => go(3)}>
                   <ArrowLeft /> Wróć do decyzji

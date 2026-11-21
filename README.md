@@ -14,7 +14,7 @@ Otwórz [localhost:3000](http://localhost:3000). Start i budowanie aplikacji imp
 
 ## Zakres tej wersji
 
-Stanowiska i ich obowiązki są syntetyczne. Szkic treningowy zapisuje się automatycznie w pamięci sesji karty. Po odświeżeniu wracają wybrany wskaźnik, obserwacje, decyzje i ustalenia rozmowy. Przycisk „Rozpocznij nową ocenę” pozwala usunąć bieżący szkic. Widok podsumowania służy do sprawdzenia wyniku. Zapis spraw na serwerze, konta, oficjalne PDF, panel HR i czat są zaplanowane w [koncepcji](CONCEPT.md).
+Stanowiska i ich obowiązki są syntetyczne. Szkic treningowy zapisuje się automatycznie w pamięci sesji karty. Po odświeżeniu wracają wybrany wskaźnik, obserwacje, decyzje i ustalenia rozmowy. Przycisk „Rozpocznij nową ocenę” pozwala usunąć bieżący szkic. Z podsumowania można pobrać arkusz B, C lub pierwszej oceny w PDF z danymi demonstracyjnymi i miejscami na podpis. PDF odwzorowuje główne części wzorów. Wniosek o kolejny stopień służbowy pozostaje poza zakresem eksportu prototypu. Noto Sans jest dołączony na licencji OFL. Zapis spraw na serwerze, konta, panel HR i czat są zaplanowane w [koncepcji](CONCEPT.md).
 
 ## Gdzie użyto AI
 
