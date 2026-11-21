@@ -1,5 +1,4 @@
 export default {
-  output: process.env.AZYMUT_STANDALONE === "1" ? "standalone" : undefined,
   serverExternalPackages: ["pdfkit"],
   outputFileTracingIncludes: {
     "/api/asystent": ["./data/knowledge.json"],

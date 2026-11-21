@@ -18,7 +18,9 @@ docker run -p 3000:3000 -v "$PWD/data:/app/data:ro" --env-file .env.local azymut
 
 ## Start kontenera
 
-`docker/entrypoint.sh` sprawdza pliki danych. Jeśli ustawiono `DATABASE_URL` i `AZYMUT_DEMO_PASSWORD`, tworzy schemat i trzy konta demo (`supervisor@`, `hr@`, `admin@azymut.example`); operacja jest idempotentna. Jeśli ustawiono też `AZYMUT_EMBED_URL` i `AZYMUT_EMBED_NAME`, buduje indeks wektorowy. Awaria indeksowania nie blokuje startu, a asystent korzysta wtedy z wyszukiwania tekstowego.
+`docker/entrypoint.sh` sprawdza pliki danych. Jeśli ustawiono `DATABASE_URL` i `AZYMUT_DEMO_PASSWORD`, tworzy schemat i cztery konta demo (`supervisor@`, `hr@`, `admin@`, `department_head@azymut.example`); operacja jest idempotentna. Jeśli ustawiono też `AZYMUT_EMBED_URL` i `AZYMUT_EMBED_NAME`, buduje indeks wektorowy. Awaria indeksowania nie blokuje startu, a asystent korzysta wtedy z wyszukiwania tekstowego.
+
+Lokalny zestaw z PostgreSQL uruchamia również `docker compose --env-file .env.local up -d --build`.
 
 ## Zmienne środowiskowe
 
@@ -29,6 +31,7 @@ docker run -p 3000:3000 -v "$PWD/data:/app/data:ro" --env-file .env.local azymut
 | `BETTER_AUTH_SECRET` | losowy sekret (np. `openssl rand -hex 32`) |
 | `AZYMUT_DEMO_PASSWORD` | hasło kont demo, co najmniej 12 znaków |
 | `AZYMUT_MODEL_URL`, `AZYMUT_MODEL_NAME` | serwer i model generujący (`/v1`) |
+| `AZYMUT_DISABLE_REASONING`, `AZYMUT_MODEL_TIMEOUT_MS` | opcjonalnie: tryb bez rozumowania dla dostawców, którzy go obsługują, i limit czasu generacji w ms |
 | `AZYMUT_EMBED_URL`, `AZYMUT_EMBED_NAME` | opcjonalnie: model embeddingów (np. `bge-m3`) |
 
 ## Coolify (demo hackathonowe)
