@@ -2,23 +2,20 @@ import { displayDate, openAssessmentDocument } from "./document";
 import type { ReportForm } from "./report";
 
 export function renderReport(data: ReportForm) {
-  const { doc, text, heading, signature, finish } = openAssessmentDocument(
-    "Formularz sprawozdania z zadań realizowanych w przepracowanym okresie",
-  );
-  text("Załącznik nr 3 do rozporządzenia z 23.07.2015 r. (Dz.U. poz. 1144)");
-  heading("Dane ocenianego");
-  text("Urząd Demonstracyjny · Wydział Organizacyjny");
-  text("Marta Przykładowa · Starszy specjalista");
-  text(
-    `Termin złożenia sprawozdania: od ${displayDate(data.reportFrom)} do ${displayDate(data.reportDue)}.`,
-  );
-  heading("Sprawozdanie");
-  text(
-    "Wskaż okres pracy objęty sprawozdaniem (co najmniej siedem przepracowanych miesięcy).",
-  );
-  text(
-    "Okres od ................................ do ................................",
-  );
+  const { text, reference, section, field, heading, writingLines, signatures, finish } =
+    openAssessmentDocument(
+      "Sprawozdanie z zadań w przepracowanym okresie",
+      "PIERWSZA OCENA  |  SPRAWOZDANIE",
+      "Marta Przykładowa",
+    );
+  reference("Załącznik nr 3 do rozporządzenia Prezesa Rady Ministrów z 23 lipca 2015 r. (Dz.U. poz. 1144)");
+  section("Dane ocenianego");
+  field("Oceniany", "Marta Przykładowa");
+  field("Komórka i stanowisko", "Wydział Organizacyjny, starszy specjalista");
+  field("Termin złożenia sprawozdania", `od ${displayDate(data.reportFrom)} do ${displayDate(data.reportDue)}`);
+  section("Sprawozdanie");
+  text("Wskaż okres pracy objęty sprawozdaniem (co najmniej siedem przepracowanych miesięcy).");
+  field("Okres pracy", "od ................................ do ................................");
   for (const topic of [
     "Zrealizowane zadania",
     "Napotkane problemy i sposób ich rozwiązania",
@@ -26,13 +23,8 @@ export function renderReport(data: ReportForm) {
     "Wnioski i propozycje usprawnienia pracy",
   ]) {
     heading(topic);
-    for (let i = 0; i < 3; i++) {
-      text(
-        "..............................................................................................................................................",
-      );
-      doc.moveDown(0.5);
-    }
+    writingLines(3);
   }
-  signature("Miejscowość, data i podpis ocenianego");
+  signatures("Podpis", ["Miejscowość, data i podpis ocenianego"]);
   return finish();
 }

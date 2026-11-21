@@ -2,7 +2,7 @@
 
 Azymut pomaga przełożonemu przygotować ocenę w służbie cywilnej. W ocenie okresowej proponuje arkusz B/C i zakres obserwacji na podstawie opisu stanowiska. Z notatek wskazuje pasujące wskaźniki modelu MC, a z potwierdzonych przykładów i otwartych pytań układa agendę rozmowy. Przełożony wybiera zaobserwowane zachowania i po rozmowie decyduje o ocenach trafiających do PDF. Pierwsza ocena ma własną ścieżkę. Kadry widzą kolejne czynności, terminy i stan przypomnienia.
 
-W demo otwórz **przykładową ocenę okresową**. Wybierz **Wstaw przykładowe notatki** i **Przeanalizuj notatki**. Porównaj cytat z oryginałem, potwierdź przypisanie jednej notatki i zapisz ogólną uwagę jako kwestię do rozmowy. Następnie otwórz agendę, wybierz ocenę po rozmowie i pobierz arkusz B.
+W demo otwórz **przykładową ocenę okresową**. Wybierz **Wstaw przykładowe notatki** i **Przeanalizuj notatki**. Sprawdź wyróżnione cytaty i wybierz **Zapisz wszystkie i przejdź dalej**. Azymut otworzy pierwszy wskaźnik bez wyboru zachowania. Po rozmowie wybierz ocenę, sprawdź propozycje treści i pobierz arkusz B.
 
 ## Uruchomienie
 

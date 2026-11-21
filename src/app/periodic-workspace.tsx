@@ -284,8 +284,8 @@ function AssessmentEditor({
   const nextNoteIndicator = noteIndicatorIds.find((id) =>
     id !== indicator.id && (!ratings[id] || ratings[id] === "pending"),
   );
-  const suggestedCopy = assessmentCopy(agenda, decisions, meeting.goals);
   const result = periodicResult(form, extra, decisions);
+  const suggestedCopy = assessmentCopy(agenda, decisions, meeting.goals, result);
   const summaryReady =
     result.status === "scored" &&
     interview &&
