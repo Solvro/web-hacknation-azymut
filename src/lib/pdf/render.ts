@@ -1,5 +1,4 @@
-import PDFDocument from "pdfkit";
-import { join } from "node:path";
+import { displayDate as date, openAssessmentDocument } from "./document";
 import { criteria, periodicCriteria } from "../scoring/periodic";
 import type { prepareAssessment } from "./assessment";
 
@@ -25,52 +24,24 @@ export async function renderAssessment({
   const title = first
     ? "Arkusz pierwszej oceny w służbie cywilnej"
     : `Arkusz ${data.form} — ocena okresowa w służbie cywilnej`;
-  const doc = new PDFDocument({
-    size: "A4",
-    margin: 42,
-    info: { Title: title },
-  });
-  const chunks: Buffer[] = [];
-  const complete = new Promise<Buffer>((resolve, reject) => {
-    doc.on("data", (chunk) => chunks.push(chunk));
-    doc.on("end", () => resolve(Buffer.concat(chunks)));
-    doc.on("error", reject);
-  });
-  doc.font(join(process.cwd(), "assets/fonts/NotoSans-Regular.ttf"));
-  const text = (value: string) => {
-    doc.fillColor("#17152c").fontSize(10).text(value, { lineGap: 2 });
-  };
-  function heading(value: string) {
-    if (doc.y > doc.page.height - 110) doc.addPage();
-    doc
-      .moveDown(0.8)
-      .fillColor("#46318c")
-      .fontSize(13)
-      .text(value)
-      .moveDown(0.35);
-  }
-  function signature(label: string) {
-    doc.moveDown(0.45);
-    text(`........................................................  ${label}`);
-  }
-  const date = (value: string) => value.split("-").reverse().join(".");
+  const { doc, text, heading, signature, finish } =
+    openAssessmentDocument(title);
   function marks(scale: number[], scores: typeof rows) {
     text("Ocena cząstkowa · X oznacza poziom wybrany przez przełożonego");
-    for (const score of scores) {
-      doc.moveDown(0.35);
-      text(score.label);
-      text(
-        scale
-          .map(
-            (points) =>
-              `${points === score.points ? "[X]" : "[ ]"} ${points} pkt`,
-          )
-          .join("       "),
-      );
-    }
+    doc
+      .fillColor("#17152c")
+      .fontSize(9)
+      .table({
+        columnStyles: ["*", ...scale.map(() => 42)],
+        data: [
+          ["Kryterium", ...scale.map((points) => points + " pkt")],
+          ...scores.map((score) => [
+            score.label,
+            ...scale.map((points) => (points === score.points ? "X" : "")),
+          ]),
+        ],
+      });
   }
-  doc.fillColor("#46318c").fontSize(10).text("AZYMUT / DANE SYNTETYCZNE");
-  doc.moveDown(0.6).fillColor("#17152c").fontSize(19).text(title);
   text(
     first
       ? "Załącznik nr 2 do rozporządzenia z 23.07.2015 r. (Dz.U. poz. 1144)"
@@ -164,6 +135,5 @@ export async function renderAssessment({
   signature("Data i podpis przełożonego");
   if (first) signature("Data i podpis kierującego komórką");
   signature("Data zapoznania i podpis ocenianego");
-  doc.end();
-  return complete;
+  return finish();
 }

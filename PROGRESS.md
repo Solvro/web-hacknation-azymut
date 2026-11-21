@@ -17,3 +17,4 @@
 - Sprawy obu ścieżek zapisują się w PostgreSQL z kontrolą wersji. Kadry widzą etapy i terminy oraz wysyłają przypomnienia. Przełożony odbiera je w sprawie, a administrator przegląda dziennik czynności.
 - Indeks 240 fragmentów można załadować do pgvector przy użyciu lokalnego modelu bge-m3. Sprawdzono zapis, ponowne indeksowanie i zapytanie kosinusowe na prawdziwym pgvector z kontrolowanym endpointem embeddingów.
 - Dodano kalkulator 30 i 7 dni na czynności rozpoczynające, standardowy cykl, przedłużenie przy ciągłej usprawiedliwionej nieobecności oraz terminy od daty zapoznania. HR widzi zapisany status zapoznania z oceną.
+- Pierwsza ocena udostępnia formularz sprawozdania z załącznika nr 3 z wyznaczonym terminem. Arkusze oceny mają tabele ocen cząstkowych z wyborem zapisanym w odpowiedniej kolumnie. Sprawdzono wydruki i pobieranie w Chrome.

@@ -296,75 +296,85 @@ export function FirstWorkspace({
             </form>
           )}
           {step === 1 && (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                go(2);
-              }}
-            >
-              <section>
-                <h2>Sprawozdanie</h2>
-                <p>
-                  Wyznaczony termin: {reportFrom} – {reportDue}.
-                </p>
-                <label className="field">
-                  Data wpływu sprawozdania
-                  <input
-                    type="date"
-                    min={start}
-                    value={received}
-                    onChange={(e) => {
-                      setReceived(e.target.value);
-                      setOverdue(false);
-                    }}
-                  />
-                </label>
-                {!received && (
-                  <label className="confirm">
+            <>
+              <AssessmentDownload
+                form="report"
+                title="Sprawozdanie pracownika"
+                label="Pobierz formularz sprawozdania"
+                payload={{ reportFrom, reportDue }}
+              />
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  go(2);
+                }}
+              >
+                <section>
+                  <h2>Sprawozdanie</h2>
+                  <p>
+                    Wyznaczony termin: {reportFrom} – {reportDue}.
+                  </p>
+                  <label className="field">
+                    Data wpływu sprawozdania
                     <input
-                      type="checkbox"
-                      checked={overdue}
-                      onChange={(e) => setOverdue(e.target.checked)}
+                      type="date"
+                      min={start}
+                      value={received}
+                      onChange={(e) => {
+                        setReceived(e.target.value);
+                        setOverdue(false);
+                      }}
                     />
-                    Termin upłynął i sprawozdanie nie wpłynęło
                   </label>
-                )}
-              </section>
-              <section>
-                <h2>Egzamin ze służby przygotowawczej</h2>
-                <label className="field">
-                  Wynik lub podstawa wyjątku
-                  <select
-                    required
-                    value={exam ?? ""}
-                    onChange={(e) =>
-                      setExam((e.target.value || null) as FirstAssessment["exam"])
-                    }
-                  >
-                    <option value="">Wybierz</option>
-                    {Object.entries(examLabels)
-                      .filter(
-                        ([key]) =>
-                          key !== "replacement_subject_to_first_evaluation" ||
-                          replacement,
-                      )
-                      .map(([key, label]) => (
-                        <option key={key} value={key}>
-                          {label}
-                        </option>
-                      ))}
-                  </select>
-                </label>
-              </section>
-              <div className="actions">
-                <button type="button" onClick={() => go(0)}>
-                  Wróć do rozmowy wstępnej
-                </button>
-                <button disabled={!report} className="primary">
-                  Przejdź do obserwacji
-                </button>
-              </div>
-            </form>
+                  {!received && (
+                    <label className="confirm">
+                      <input
+                        type="checkbox"
+                        checked={overdue}
+                        onChange={(e) => setOverdue(e.target.checked)}
+                      />
+                      Termin upłynął i sprawozdanie nie wpłynęło
+                    </label>
+                  )}
+                </section>
+                <section>
+                  <h2>Egzamin ze służby przygotowawczej</h2>
+                  <label className="field">
+                    Wynik lub podstawa wyjątku
+                    <select
+                      required
+                      value={exam ?? ""}
+                      onChange={(e) =>
+                        setExam(
+                          (e.target.value || null) as FirstAssessment["exam"],
+                        )
+                      }
+                    >
+                      <option value="">Wybierz</option>
+                      {Object.entries(examLabels)
+                        .filter(
+                          ([key]) =>
+                            key !== "replacement_subject_to_first_evaluation" ||
+                            replacement,
+                        )
+                        .map(([key, label]) => (
+                          <option key={key} value={key}>
+                            {label}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                </section>
+                <div className="actions">
+                  <button type="button" onClick={() => go(0)}>
+                    Wróć do rozmowy wstępnej
+                  </button>
+                  <button disabled={!report} className="primary">
+                    Przejdź do obserwacji
+                  </button>
+                </div>
+              </form>
+            </>
           )}
           {step === 2 && (
             <>

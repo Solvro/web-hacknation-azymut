@@ -7,16 +7,20 @@ export function AssessmentDownload({
   form,
   payload,
   children,
+  title = "Arkusz do podpisu",
+  label = "Pobierz PDF",
 }: {
   form: string;
   payload: Record<string, unknown>;
   children?: ReactNode;
+  title?: string;
+  label?: string;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   return (
     <section>
-      <h2>Arkusz do podpisu</h2>
+      <h2>{title}</h2>
       <form
         onSubmit={async (event) => {
           event.preventDefault();
@@ -49,8 +53,7 @@ export function AssessmentDownload({
       >
         {children}
         <button className="primary" disabled={busy}>
-          <FileDown className="inline" />{" "}
-          {busy ? "Przygotowywanie…" : "Pobierz PDF"}
+          <FileDown className="inline" /> {busy ? "Przygotowywanie…" : label}
         </button>
         {error && <p role="alert">{error}</p>}
       </form>
