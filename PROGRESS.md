@@ -10,3 +10,4 @@
 - 21 listopada — szkic okresowej B/C wznawia się po odświeżeniu w tej samej karcie. Odczyt sprawdza wersję modelu, wybrane kryteria, wskaźnik i kompletność wyniku. Użytkownik może rozpocząć nową ocenę po potwierdzeniu.
 - 21 listopada — dodano wymagane wnioski do indywidualnego programu rozwoju zawodowego w obu arkuszach okresowych. Starsze podsumowania bez tego pola wracają do uzupełnienia z zachowaniem decyzji.
 - 21 listopada — ekran obserwacji i etap decyzji wyjaśniają sugestię dla każdego kryterium: wskazują wybrane zachowania, pominięte wskaźniki, średnią, rozstrzygnięcie remisu lub powód braku sugestii.
+- Dodano ścieżkę pierwszej oceny z terminami, sprawozdaniem, egzaminem, obserwacjami i decyzjami w skali 3/5/7.

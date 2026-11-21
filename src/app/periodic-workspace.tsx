@@ -7,6 +7,7 @@ import {
   MeetingSummary,
   OpeningMeetingForm,
 } from "./opening-meeting";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   draftStorageKey,
@@ -217,7 +218,7 @@ function AssessmentEditor({
         <div className="brand">
           <Compass aria-hidden="true" size={32} /> Azymut
         </div>
-        <span>Kompas Kompetencji</span>
+        <Link href="/pierwsza">Pierwsza ocena</Link>
         <span className="demo">Demo przełożonego</span>
       </header>
       <p className="desktop-only">

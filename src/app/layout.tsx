@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Azymut · Ocena okresowa",
+  title: "Azymut · Kompas Kompetencji",
   description: "Ocena kompetencji w służbie cywilnej",
 };
 
