@@ -4,7 +4,7 @@ import "./assistant-chat.css";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   ArrowDown,
-  ArrowUp,
+  ArrowLeft,
   BookOpen,
   ChevronRight,
   MessageCircle,
@@ -83,25 +83,19 @@ const modes: Record<Mode, string> = {
 
 const prompts = {
   periodic: [
-    ["Kryteria dodatkowe", "Ile kryteriów dodatkowych mogę wybrać?"],
-    ["Wynik oceny", "Kiedy ocena okresowa jest negatywna?"],
-    [
-      "Termin na sprzeciw",
-      "Ile dni ma pracownik na wniesienie sprzeciwu od oceny okresowej?",
-    ],
+    "Ile kryteriów dodatkowych mogę wybrać?",
+    "Kiedy ocena okresowa jest negatywna?",
+    "Ile dni ma pracownik na wniesienie sprzeciwu?",
   ],
   first: [
-    [
-      "Rozmowa wstępna",
-      "Do kiedy muszę przeprowadzić rozmowę wstępną przy pierwszej ocenie?",
-    ],
-    ["Wynik oceny", "Kiedy pierwsza ocena jest pozytywna?"],
-    ["Podpisy na arkuszu", "Kto podpisuje arkusz pierwszej oceny?"],
+    "Do kiedy muszę przeprowadzić rozmowę wstępną?",
+    "Kiedy pierwsza ocena jest pozytywna?",
+    "Kto podpisuje arkusz pierwszej oceny?",
   ],
   conversation: [
-    ["Plan rozmowy", "Jak ułożyć plan rozmowy oceniającej?"],
-    ["Pytania o współpracę", "Jakie otwarte pytania mogę zadać o współpracę?"],
-    ["Rozmowa o rozwoju", "Jak zapytać o potrzeby rozwojowe pracownika?"],
+    "Jak ułożyć plan rozmowy oceniającej?",
+    "Jakie otwarte pytania mogę zadać o współpracę?",
+    "Jak zapytać o potrzeby rozwojowe pracownika?",
   ],
 };
 
@@ -116,14 +110,14 @@ export function AssistantChat({
   active?: boolean;
   close?: () => void;
 }) {
-  const [selectedScope, setScope] = useState<Scope>("periodic");
+  const [selectedScope, setScope] = useState<Scope>();
   const scope = fixedScope ?? selectedScope;
-  const [mode, setMode] = useState<Mode>("formal");
-  const [drafts, setDrafts] = useState<Record<Scope, string>>({
-    periodic: "",
-    first: "",
-  });
-  const question = drafts[scope];
+  const [mode, setMode] = useState<Mode>();
+  const [drafts, setDrafts] = useState<
+    Partial<Record<`${Scope}-${Mode}`, string>>
+  >({});
+  const draftKey = scope && mode ? (`${scope}-${mode}` as const) : undefined;
+  const question = (draftKey && drafts[draftKey]) ?? "";
   const [thread, setThread] = useState<Turn[]>([]);
   const [pending, setPending] = useState<{ id: number; phase: Progress }>();
   const [announcement, setAnnouncement] = useState("");
@@ -134,10 +128,13 @@ export function AssistantChat({
   const viewport = useRef<HTMLDivElement>(null);
   const followLatest = useRef(true);
   const viewportId = useId();
-  const helpId = useId();
-  const visibleThread = thread.filter((turn) => turn.scope === scope);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const visibleThread = thread.filter(
+    (turn) => turn.scope === scope && turn.mode === mode,
+  );
   const lastTurn = visibleThread.at(-1);
-  const suggestions = prompts[mode === "formal" ? scope : "conversation"];
+  const suggestions =
+    prompts[mode === "formal" && scope ? scope : "conversation"];
   const Heading = fixedScope ? "h2" : "h1";
 
   useEffect(() => () => request.current?.abort(), []);
@@ -151,7 +148,14 @@ export function AssistantChat({
 
   useEffect(() => {
     if (active && followLatest.current) scrollToLatest();
-  }, [active, thread, scope, pending]);
+  }, [active, thread, scope, mode, pending]);
+
+  function selectTopic(selection: () => void) {
+    followLatest.current = true;
+    setAtBottom(true);
+    selection();
+    requestAnimationFrame(() => heading.current?.focus());
+  }
 
   function updateTurn(id: number, changes: Partial<Turn>) {
     setThread((current) =>
@@ -216,9 +220,6 @@ export function AssistantChat({
       const reader = response.body
         .pipeThrough(new TextDecoderStream())
         .getReader();
-      const reduceMotion = matchMedia(
-        "(prefers-reduced-motion: reduce)",
-      ).matches;
       let buffer = "";
       try {
         while (!result) {
@@ -237,10 +238,8 @@ export function AssistantChat({
               method = event.method;
             }
             if (event.type === "text") {
-              answer += event.text;
-              updateTurn(turn.id, { answer, sources, method });
-              if (!reduceMotion)
-                await new Promise((resolve) => setTimeout(resolve, 16));
+              answer = event.replace ? event.text : answer + event.text;
+              updateTurn(turn.id, { answer });
             }
             if (event.type === "done") result = event;
             end = buffer.indexOf("\n");
@@ -254,12 +253,14 @@ export function AssistantChat({
         updateTurn(turn.id, {
           answer: undefined,
           sources: result.reply.sources,
+          method: undefined,
           notice: result.reply.status,
         });
         announcement = notices[result.reply.status];
       } else if (!answer || !sources?.length) {
         throw new Error("Niepełna odpowiedź");
       } else {
+        updateTurn(turn.id, { answer, sources, method });
         announcement =
           "Odpowiedź jest gotowa. Pod wiadomością znajdziesz źródła.";
       }
@@ -283,11 +284,19 @@ export function AssistantChat({
 
   function send(text: string, clearDraft = true) {
     const asked = text.trim();
-    if (asked.length < 5 || asked.length > 1200 || request.current) return;
+    if (
+      !scope ||
+      !mode ||
+      !draftKey ||
+      asked.length < 5 ||
+      asked.length > 1200 ||
+      request.current
+    )
+      return;
     const previous = visibleThread.findLast(
       (turn) => turn.mode === mode && turn.answer && !turn.notice,
     );
-    if (clearDraft) setDrafts((current) => ({ ...current, [scope]: "" }));
+    if (clearDraft) setDrafts((current) => ({ ...current, [draftKey]: "" }));
     void ask({
       id: ++nextId.current,
       scope,
@@ -301,270 +310,283 @@ export function AssistantChat({
   return (
     <div className="assistant-chat">
       <header className="chat-header">
-        <div className="chat-identity">
-          <span className="chat-avatar">
-            <Sparkles aria-hidden="true" size={21} />
-          </span>
+        <div className="chat-header-inner">
           <div>
-            <Heading>Asystent Azymutu</Heading>
+            <Heading ref={heading} tabIndex={-1}>
+              {mode ? modes[mode] : scope ? "W czym Ci pomóc?" : "Asystent"}
+            </Heading>
             <p>
-              {fixedScope
-                ? scopes[fixedScope]
-                : "Przepisy i rozmowy oceniające"}
+              {scope
+                ? scopes[scope]
+                : "Wybierz ocenę, której dotyczy Twoje pytanie."}
             </p>
           </div>
-        </div>
-        {close && (
-          <button
-            type="button"
-            className="chat-icon"
-            aria-label="Zamknij asystenta"
-            onClick={close}
-          >
-            <X aria-hidden="true" size={20} />
-          </button>
-        )}
-        {!fixedScope && (
-          <div className="chat-scopes" role="group" aria-label="Rodzaj oceny">
-            {(["periodic", "first"] as const).map((value) => (
+          <div className="chat-header-actions">
+            {mode && (
               <button
-                key={value}
                 type="button"
-                aria-pressed={scope === value}
+                className="chat-back"
                 disabled={!!pending}
-                onClick={() => {
-                  followLatest.current = true;
-                  setScope(value);
-                }}
+                onClick={() => selectTopic(() => setMode(undefined))}
               >
-                {scopes[value]}
+                <ArrowLeft aria-hidden="true" size={16} /> Zmień temat
               </button>
-            ))}
+            )}
+            {scope && !mode && !fixedScope && (
+              <button
+                type="button"
+                className="chat-back"
+                onClick={() => selectTopic(() => setScope(undefined))}
+              >
+                <ArrowLeft aria-hidden="true" size={16} /> Zmień rodzaj oceny
+              </button>
+            )}
+            {close && (
+              <button
+                type="button"
+                className="chat-icon"
+                aria-label="Zamknij asystenta"
+                onClick={close}
+              >
+                <X aria-hidden="true" size={20} />
+              </button>
+            )}
           </div>
-        )}
+        </div>
       </header>
-
-      <div className="chat-body">
-        <div
-          className="chat-history"
-          id={viewportId}
-          ref={viewport}
-          tabIndex={0}
-          role="region"
-          aria-label="Wiadomości w rozmowie"
-          onScroll={(event) => {
-            const { scrollHeight, scrollTop, clientHeight } =
-              event.currentTarget;
-            followLatest.current = scrollHeight - scrollTop - clientHeight < 48;
-            setAtBottom(followLatest.current);
-          }}
-        >
-          {visibleThread.length === 0 ? (
-            <div className="chat-welcome">
-              <span className="chat-welcome-icon">
-                <MessageCircle aria-hidden="true" size={28} />
-              </span>
-              <h2>W czym mogę Ci pomóc?</h2>
-              <p>
-                Zapytaj o zasady{" "}
-                {scope === "first" ? "pierwszej oceny" : "oceny okresowej"} lub
-                przygotuj się do rozmowy z pracownikiem.
-              </p>
-              <ul className="chat-prompts" aria-label="Przykładowe pytania">
-                {suggestions.map(([label, text]) => (
-                  <li key={text}>
-                    <button type="button" onClick={() => send(text, false)}>
-                      <strong>{label}</strong>
-                      <ChevronRight aria-hidden="true" size={16} />
-                      <span>{text}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : (
-            <ol className="chat-turns">
-              {visibleThread.map((turn) => (
-                <li className="chat-turn" key={turn.id}>
-                  <div className="chat-outgoing">
-                    <span className="chat-byline">Ty · {modes[turn.mode]}</span>
-                    <div className="chat-bubble">{turn.question}</div>
-                  </div>
-                  <div className="chat-incoming">
-                    <span className="chat-avatar">
-                      <Sparkles aria-hidden="true" size={15} />
-                    </span>
-                    <div
-                      className="chat-bubble"
-                      aria-label="Odpowiedź asystenta"
-                    >
-                      {pending?.id === turn.id &&
-                      !turn.answer &&
-                      !turn.notice ? (
-                        <div className="chat-waiting">
-                          <p>{phases[pending.phase]}</p>
-                          <div className="chat-shimmer" aria-hidden="true">
-                            <span />
-                            <span />
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <p className="chat-text">
-                            {turn.notice ? notices[turn.notice] : turn.answer}
-                          </p>
-                          {turn.method === "rule" && (
-                            <small className="chat-method">
-                              Odpowiedź z reguły i przepisu
-                            </small>
-                          )}
-                          {!!turn.sources?.length && (
-                            <Sources
-                              sources={turn.sources}
-                              fallback={!!turn.notice}
-                            />
-                          )}
-                          {turn.notice === "session" && (
-                            <a href="/logowanie">Przejdź do logowania</a>
-                          )}
-                          {turn.id === lastTurn?.id &&
-                            turn.notice &&
-                            retryable.has(turn.notice) &&
-                            !pending && (
-                              <button
-                                type="button"
-                                className="chat-retry"
-                                onClick={() =>
-                                  void ask({
-                                    ...turn,
-                                    answer: undefined,
-                                    sources: undefined,
-                                    notice: undefined,
-                                  })
-                                }
-                              >
-                                <RotateCcw aria-hidden="true" size={15} />{" "}
-                                Spróbuj ponownie
-                              </button>
-                            )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          )}
-        </div>
-        {!atBottom && (
-          <button
-            type="button"
-            className="chat-latest"
-            aria-controls={viewportId}
-            onClick={scrollToLatest}
-          >
-            <ArrowDown aria-hidden="true" size={17} /> Najnowsza wiadomość
-          </button>
-        )}
-      </div>
-      <span className="sr-only" role="status">
-        {announcement}
-      </span>
-
-      <form
-        className="chat-composer"
-        onSubmit={(event) => {
-          event.preventDefault();
-          send(question);
-        }}
-      >
-        <div className="chat-modes" role="group" aria-label="Temat pytania">
-          {(["formal", "conversation"] as const).map((value) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={mode === value}
-              disabled={!!pending}
-              onClick={() => setMode(value)}
-            >
-              {value === "formal" ? (
-                <BookOpen aria-hidden="true" size={15} />
-              ) : (
-                <MessageCircle aria-hidden="true" size={15} />
-              )}
-              {modes[value]}
-            </button>
-          ))}
-        </div>
-        <div className="chat-input">
-          <textarea
-            ref={input}
-            rows={2}
-            maxLength={1200}
-            value={question}
-            placeholder={
-              mode === "formal"
-                ? "Zadaj pytanie o zasady oceny…"
-                : "O co chcesz zapytać przed rozmową?"
-            }
-            aria-label="Wiadomość do asystenta"
-            aria-describedby={helpId}
-            onChange={(event) =>
-              setDrafts({ ...drafts, [scope]: event.target.value })
-            }
-            onKeyDown={(event) => {
-              if (
-                event.key === "Enter" &&
-                !event.shiftKey &&
-                !event.nativeEvent.isComposing
-              ) {
-                event.preventDefault();
-                event.currentTarget.form?.requestSubmit();
-              }
-            }}
+      {!scope ? (
+        <div className="chat-choices">
+          <Choice
+            title={scopes.periodic}
+            description="Ocena pracownika przeprowadzana w trakcie zatrudnienia."
+            onClick={() => selectTopic(() => setScope("periodic"))}
           />
-          {pending ? (
-            <button
-              type="button"
-              className="chat-icon chat-send"
-              aria-label="Zatrzymaj odpowiedź"
-              title="Zatrzymaj odpowiedź"
-              onClick={() => {
-                request.current?.abort();
-                input.current?.focus();
+          <Choice
+            title={scopes.first}
+            description="Ocena osoby rozpoczynającej pracę w służbie cywilnej."
+            onClick={() => selectTopic(() => setScope("first"))}
+          />
+        </div>
+      ) : !draftKey ? (
+        <div className="chat-choices">
+          <Choice
+            title="Zapytaj o zasady oceny"
+            description="Sprawdź terminy, wymagania i sposób przeprowadzenia oceny."
+            onClick={() => selectTopic(() => setMode("formal"))}
+          />
+          <Choice
+            title="Przygotuj rozmowę"
+            description="Ułóż plan i pytania na spotkanie z pracownikiem."
+            onClick={() => selectTopic(() => setMode("conversation"))}
+          />
+        </div>
+      ) : (
+        <>
+          <div className="chat-body">
+            <div
+              className="chat-history"
+              id={viewportId}
+              ref={viewport}
+              tabIndex={0}
+              role="region"
+              aria-label="Wiadomości w rozmowie"
+              onScroll={(event) => {
+                const { scrollHeight, scrollTop, clientHeight } =
+                  event.currentTarget;
+                followLatest.current =
+                  scrollHeight - scrollTop - clientHeight < 48;
+                setAtBottom(followLatest.current);
               }}
             >
-              <Square aria-hidden="true" size={17} />
-            </button>
-          ) : (
-            <button
-              type="submit"
-              className="chat-icon chat-send"
-              aria-label="Wyślij wiadomość"
-              title="Wyślij wiadomość"
-              disabled={question.trim().length < 5}
-            >
-              <ArrowUp aria-hidden="true" size={20} />
-            </button>
-          )}
-        </div>
-        <div className="chat-help" id={helpId}>
-          <span>
-            {mode === "conversation" && evidence.length > 0
-              ? "Czat korzysta z przykładów z tej sprawy. "
-              : ""}
-            Wpisuj tylko fikcyjne dane.
+              {visibleThread.length === 0 ? (
+                <div className="chat-welcome">
+                  <h2>Zacznij od pytania</h2>
+                  <ul className="chat-prompts" aria-label="Przykładowe pytania">
+                    {suggestions.map((text) => (
+                      <li key={text}>
+                        <button type="button" onClick={() => send(text, false)}>
+                          {text}
+                          <ChevronRight aria-hidden="true" size={16} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <ol className="chat-turns">
+                  {visibleThread.map((turn) => (
+                    <li className="chat-turn" key={turn.id}>
+                      <div className="chat-outgoing">
+                        <div className="chat-bubble">{turn.question}</div>
+                      </div>
+                      <div className="chat-incoming">
+                        <span className="chat-avatar">
+                          <Sparkles aria-hidden="true" size={15} />
+                        </span>
+                        <div
+                          className="chat-bubble"
+                          aria-label="Odpowiedź asystenta"
+                        >
+                          {pending?.id === turn.id &&
+                          !turn.answer &&
+                          !turn.notice ? (
+                            <div className="chat-waiting">
+                              <p>{phases[pending.phase]}</p>
+                              <div className="chat-shimmer" aria-hidden="true">
+                                <span />
+                                <span />
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="chat-text">
+                                {turn.notice
+                                  ? notices[turn.notice]
+                                  : turn.answer}
+                              </p>
+                              {turn.method === "rule" && (
+                                <small className="chat-method">
+                                  Odpowiedź z reguły i przepisu
+                                </small>
+                              )}
+                              {pending?.id !== turn.id &&
+                                !!turn.sources?.length && (
+                                  <Sources
+                                    sources={turn.sources}
+                                    fallback={!!turn.notice}
+                                  />
+                                )}
+                              {turn.notice === "session" && (
+                                <a href="/logowanie">Przejdź do logowania</a>
+                              )}
+                              {turn.id === lastTurn?.id &&
+                                turn.notice &&
+                                retryable.has(turn.notice) &&
+                                !pending && (
+                                  <button
+                                    type="button"
+                                    className="chat-retry"
+                                    onClick={() =>
+                                      void ask({
+                                        ...turn,
+                                        answer: undefined,
+                                        sources: undefined,
+                                        notice: undefined,
+                                      })
+                                    }
+                                  >
+                                    <RotateCcw aria-hidden="true" size={15} />{" "}
+                                    Spróbuj ponownie
+                                  </button>
+                                )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+            {!atBottom && (
+              <button
+                type="button"
+                className="chat-latest"
+                aria-controls={viewportId}
+                onClick={scrollToLatest}
+              >
+                <ArrowDown aria-hidden="true" size={17} /> Najnowsza wiadomość
+              </button>
+            )}
+          </div>
+          <span className="sr-only" role="status">
+            {announcement}
           </span>
-          <span>
-            {question.length >= 1100
-              ? question.length + "/1200"
-              : question.trim().length > 0 && question.trim().length < 5
-                ? "Co najmniej 5 znaków"
-                : "Enter wysyła · Shift+Enter nowy wiersz"}
-          </span>
-        </div>
-      </form>
+
+          <form
+            className="chat-composer"
+            onSubmit={(event) => {
+              event.preventDefault();
+              send(question);
+            }}
+          >
+            <div className="chat-input">
+              <textarea
+                ref={input}
+                rows={2}
+                maxLength={1200}
+                value={question}
+                placeholder={
+                  mode === "formal"
+                    ? "Zadaj pytanie o zasady oceny…"
+                    : "O co chcesz zapytać przed rozmową?"
+                }
+                aria-label="Wiadomość do asystenta"
+                onChange={(event) =>
+                  setDrafts({ ...drafts, [draftKey]: event.target.value })
+                }
+                onKeyDown={(event) => {
+                  if (
+                    event.key === "Enter" &&
+                    !event.shiftKey &&
+                    !event.nativeEvent.isComposing
+                  ) {
+                    event.preventDefault();
+                    event.currentTarget.form?.requestSubmit();
+                  }
+                }}
+              />
+              {pending ? (
+                <button
+                  type="button"
+                  className="chat-send primary"
+                  aria-label="Zatrzymaj odpowiedź"
+                  title="Zatrzymaj odpowiedź"
+                  onClick={() => {
+                    request.current?.abort();
+                    input.current?.focus();
+                  }}
+                >
+                  <Square aria-hidden="true" size={15} /> Zatrzymaj
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="chat-send primary"
+                  aria-label="Wyślij wiadomość"
+                  title="Wyślij wiadomość"
+                  disabled={question.trim().length < 5}
+                >
+                  Wyślij
+                </button>
+              )}
+            </div>
+            {question.trim().length > 0 && question.trim().length < 5 && (
+              <small>Pytanie musi mieć co najmniej 5 znaków.</small>
+            )}
+            {question.length >= 1100 && <small>{question.length}/1200</small>}
+          </form>
+        </>
+      )}
     </div>
+  );
+}
+
+function Choice({
+  title,
+  description,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" className="tile chat-choice" onClick={onClick}>
+      <strong>{title}</strong>
+      <span>{description}</span>
+      <ChevronRight aria-hidden="true" size={20} />
+    </button>
   );
 }
 
@@ -614,7 +636,8 @@ export function AssistantPanel({
   const id = useId();
 
   useEffect(() => {
-    if (open) drawer.current?.querySelector("textarea")?.focus();
+    if (open)
+      drawer.current?.querySelector<HTMLElement>(".chat-header h2")?.focus();
   }, [open]);
 
   function close() {

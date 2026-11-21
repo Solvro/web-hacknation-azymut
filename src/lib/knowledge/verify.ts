@@ -6,6 +6,8 @@ export const generatedCitation = z.object({
   quote: z.string().trim().min(12).max(700),
 });
 
+const generatedCitations = z.array(generatedCitation).min(1).max(6);
+
 const generatedAnswer = z.object({
   answer: z
     .string()
@@ -13,7 +15,7 @@ const generatedAnswer = z.object({
     .min(1)
     .max(4500)
     .refine((value) => value.toLowerCase() !== "insufficient"),
-  citations: z.array(generatedCitation).min(1).max(6),
+  citations: generatedCitations,
 });
 
 const whitespace = (value: string) =>
@@ -22,8 +24,15 @@ const whitespace = (value: string) =>
 export function verifyAnswer(raw: unknown, context: Source[]) {
   const parsed = generatedAnswer.safeParse(raw);
   if (!parsed.success) return null;
+  const sources = verifyCitations(parsed.data.citations, context);
+  return sources && { answer: parsed.data.answer, sources };
+}
+
+export function verifyCitations(raw: unknown, context: Source[]) {
+  const parsed = generatedCitations.safeParse(raw);
+  if (!parsed.success) return null;
   const sources = [];
-  for (const citation of parsed.data.citations) {
+  for (const citation of parsed.data) {
     const source = context.find((item) => item.id === citation.id);
     if (
       !source ||
@@ -38,5 +47,5 @@ export function verifyAnswer(raw: unknown, context: Source[]) {
       url: source.url,
     });
   }
-  return { answer: parsed.data.answer, sources };
+  return sources;
 }

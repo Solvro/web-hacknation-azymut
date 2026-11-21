@@ -7,11 +7,11 @@ export const dynamic = "force-dynamic";
 export default async function AssistantPage() {
   const session = await requireRole(["supervisor"]);
   return (
-    <>
+    <div className="assistant-page-layout">
       <AppHeader authenticated={!!session} section="Asystent" />
       <main className="chat-page">
         <AssistantChat />
       </main>
-    </>
+    </div>
   );
 }

@@ -3,14 +3,18 @@ import { loadKnowledge, searchEmbedding } from "../../../lib/server/knowledge";
 import { formalRuleAnswer } from "../../../lib/knowledge/formal-rules";
 import { faqSources } from "../../../lib/knowledge/faq";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { generateText, NoObjectGeneratedError, Output } from "ai";
+import { generateText, NoObjectGeneratedError, Output, streamText } from "ai";
 import { z } from "zod";
 import {
   normalize,
   searchSources,
   type Source,
 } from "../../../lib/knowledge/search";
-import { generatedCitation, verifyAnswer } from "../../../lib/knowledge/verify";
+import {
+  generatedCitation,
+  verifyAnswer,
+  verifyCitations,
+} from "../../../lib/knowledge/verify";
 import {
   chatStreamType,
   type ChatEvent,
@@ -37,8 +41,8 @@ const requestSchema = z.object({
 
 const outputSchema = z.object({
   status: z.enum(["answered", "insufficient"]),
-  answer: z.string().max(4500),
   citations: z.array(generatedCitation).max(6),
+  answer: z.string().max(4500),
 });
 
 export async function POST(request: Request) {
@@ -70,18 +74,26 @@ function streamAnswer(
           controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
       };
       try {
-        const reply = await answerQuestion(input, signal, (phase) =>
-          send({ type: "progress", phase }),
-        );
+        let published = "";
+        const reply = await answerQuestion(input, signal, {
+          progress: (phase) => send({ type: "progress", phase }),
+          publish: (prefix) => {
+            if (!prefix.startsWith(published) || prefix === published) return;
+            send({ type: "text", text: prefix.slice(published.length) });
+            published = prefix;
+          },
+        });
         if (reply.status === "answered") {
           send({
             type: "sources",
             sources: reply.sources,
             method: reply.method,
           });
-          const chunks = reply.answer.match(/\S+\s*|\s+/gu) ?? [];
-          for (let i = 0; i < chunks.length; i += 4)
-            send({ type: "text", text: chunks.slice(i, i + 4).join("") });
+          if (!reply.answer.startsWith(published)) {
+            send({ type: "text", text: reply.answer, replace: true });
+          } else if (reply.answer.length > published.length) {
+            send({ type: "text", text: reply.answer.slice(published.length) });
+          }
           send({ type: "done", reply: { status: "answered" } });
         } else {
           send({ type: "done", reply });
@@ -115,7 +127,10 @@ async function answerQuestion(
     evidence,
   }: z.infer<typeof requestSchema>,
   signal: AbortSignal,
-  progress: (phase: Progress) => void = () => {},
+  stream?: {
+    progress: (phase: Progress) => void;
+    publish: (prefix: string) => void;
+  },
 ): Promise<Reply> {
   if (
     /\b(jaka? ocene|ile punktow).*(mam |powinien|powinnam|dac|przyznac)|\b(ocen pracownika|wystaw ocene|przyznaj punkty)\b/.test(
@@ -124,7 +139,7 @@ async function answerQuestion(
   ) {
     return { status: "decision" };
   }
-  progress("searching");
+  stream?.progress("searching");
   let knowledge: Awaited<ReturnType<typeof loadKnowledge>>;
   try {
     knowledge = await loadKnowledge();
@@ -189,15 +204,16 @@ async function answerQuestion(
   if (!process.env.AZYMUT_MODEL_URL || !process.env.AZYMUT_MODEL_NAME) {
     return { status: "model-unavailable", sources };
   }
+  let providerFailed = false;
   try {
-    progress("writing");
+    stream?.progress("writing");
     const provider = createOpenAICompatible({
       name: "azymut-internal",
       baseURL: process.env.AZYMUT_MODEL_URL,
       apiKey: process.env.AZYMUT_MODEL_TOKEN || undefined,
       supportsStructuredOutputs: true,
     });
-    const { output } = await generateText({
+    const options = {
       model: provider.chatModel(process.env.AZYMUT_MODEL_NAME),
       output: Output.object({ schema: outputSchema }),
       providerOptions:
@@ -217,6 +233,7 @@ async function answerQuestion(
         "Poprzednia wymiana jest kontekstem rozmowy. Nie traktuj jej jako źródła.",
         "Przy sprzeczności pierwszeństwo mają przepisy przed poradnikami. Rozróżniaj pierwszą i okresową ocenę.",
         "Jeżeli fragment pozwala odpowiedzieć, ustaw status answered i odpowiedz. W przeciwnym razie ustaw insufficient, answer na pusty tekst i citations na pustą tablicę.",
+        "Zwracaj klucze JSON w kolejności: status, citations, answer. Najpierw umieść całą listę cytatów, potem treść odpowiedzi.",
         "Nigdy nie przyznawaj ani nie proponuj punktów pracownikowi i nie podejmuj decyzji kadrowej.",
         "Do każdej odpowiedzi dodaj identyfikatory fragmentów i dosłowne krótkie cytaty. Nie parafrazuj w polu quote.",
         mode === "formal"
@@ -235,15 +252,46 @@ async function answerQuestion(
           text,
         })),
       }),
-    });
+    } satisfies Parameters<typeof streamText>[0];
+    let output: z.infer<typeof outputSchema>;
+    if (stream) {
+      const response = streamText({
+        ...options,
+        onError: () => {
+          providerFailed = true;
+        },
+      });
+      for await (const partial of response.partialOutputStream) {
+        if (
+          partial.status !== "answered" ||
+          !partial.answer ||
+          partial.answer.length > 4500
+        )
+          continue;
+        const fields = Object.keys(partial);
+        const citationsIndex = fields.indexOf("citations");
+        if (
+          citationsIndex === -1 ||
+          citationsIndex > fields.indexOf("answer") ||
+          !verifyCitations(partial.citations, context)
+        )
+          continue;
+        // The final word can still contain an incomplete JSON escape or token.
+        stream.publish(partial.answer.replace(/\S*$/u, "").trim());
+      }
+      options.abortSignal?.throwIfAborted();
+      output = await response.output;
+    } else {
+      ({ output } = await generateText(options));
+    }
     if (output.status === "insufficient")
       return { status: "insufficient", sources };
-    progress("checking");
+    stream?.progress("checking");
     const verified = verifyAnswer(output, context);
     if (!verified) return { status: "unverified", sources };
     return { status: "answered", method: "model", ...verified };
   } catch (error) {
-    if (NoObjectGeneratedError.isInstance(error))
+    if (!providerFailed && NoObjectGeneratedError.isInstance(error))
       return { status: "unverified", sources };
     return { status: "model-unavailable", sources };
   }

@@ -31,7 +31,7 @@ export type Progress = "searching" | "writing" | "checking";
 export type ChatEvent =
   | { type: "progress"; phase: Progress }
   | { type: "sources"; sources: Citation[]; method: "rule" | "model" }
-  | { type: "text"; text: string }
+  | { type: "text"; text: string; replace?: boolean }
   | {
       type: "done";
       reply: Exclude<Reply, { status: "answered" }> | { status: "answered" };
