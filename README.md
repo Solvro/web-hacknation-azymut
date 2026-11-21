@@ -1,6 +1,6 @@
 # Azymut
 
-Prototyp wspiera przełożonego w służbie cywilnej. W przeglądarce można przejść przez dobór kryteriów arkusza B lub C, wybór obserwowanych zachowań, rozmowę i własne decyzje prowadzące do podsumowania. Punktacja pierwszej oceny jest dostępna jako osobny moduł TypeScript z testami.
+Prototyp wspiera przełożonego w służbie cywilnej. W przeglądarce można przejść przez dobór kryteriów arkusza B lub C, rozmowę rozpoczynającą z ustaleniem terminów, wybór obserwowanych zachowań, rozmowę i własne decyzje prowadzące do podsumowania. Punktacja pierwszej oceny jest dostępna jako osobny moduł TypeScript z testami.
 
 ## Uruchomienie
 

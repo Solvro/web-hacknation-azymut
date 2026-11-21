@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  emptyMeeting,
+  MeetingSummary,
+  OpeningMeetingForm,
+} from "./opening-meeting";
 import { useState } from "react";
 import {
   ArrowLeft,
@@ -47,6 +52,7 @@ const roles = {
 };
 const steps = [
   "Stanowisko i kryteria",
+  "Rozmowa rozpoczynająca",
   "Obserwacje",
   "Rozmowa i decyzje",
   "Podsumowanie",
@@ -71,6 +77,7 @@ export function PeriodicWorkspace({ model }: { model: CompetencyModel }) {
   const [decisions, setDecisions] = useState<Decisions>({});
   const [interview, setInterview] = useState(false);
   const [justification, setJustification] = useState("");
+  const [meeting, setMeeting] = useState(emptyMeeting);
   const mandatory = periodicCriteria(form);
   const selected = periodicCriteria(form, extra);
   const key = selected[active];
@@ -141,7 +148,7 @@ export function PeriodicWorkspace({ model }: { model: CompetencyModel }) {
         </aside>
         <main>
           <div className="context">
-            Ocena okresowa <span>/</span> Krok {step + 1} z 4
+            Ocena okresowa <span>/</span> Krok {step + 1} z {steps.length}
           </div>
           <h1>{steps[step]}</h1>
           {step === 0 && (
@@ -160,6 +167,7 @@ export function PeriodicWorkspace({ model }: { model: CompetencyModel }) {
                     onClick={() => {
                       if (form !== f) {
                         setForm(f);
+                        setMeeting(emptyMeeting);
                         setExtra([]);
                       }
                     }}
@@ -208,12 +216,22 @@ export function PeriodicWorkspace({ model }: { model: CompetencyModel }) {
               </section>
               <div className="actions">
                 <button className="primary" onClick={() => go(1)}>
-                  Ustal kryteria i rozpocznij <ArrowRight />
+                  Przejdź do rozmowy rozpoczynającej <ArrowRight />
                 </button>
               </div>
             </>
           )}
           {step === 1 && (
+            <OpeningMeetingForm
+              duties={roles[form].duties}
+              criteria={selected.map((c) => criteria[c])}
+              meeting={meeting}
+              onChange={setMeeting}
+              onBack={() => go(0)}
+              onComplete={() => go(2)}
+            />
+          )}
+          {step === 2 && (
             <>
               <p className="lead">
                 Wybierz zachowania z modelu MC, które udało się zaobserwować w
@@ -316,19 +334,23 @@ export function PeriodicWorkspace({ model }: { model: CompetencyModel }) {
                 </p>
               </section>
               <div className="actions">
-                <button className="primary" onClick={() => go(2)}>
+                <button className="primary" onClick={() => go(3)}>
                   Przejdź do rozmowy <ArrowRight />
                 </button>
               </div>
             </>
           )}
-          {step === 2 && (
+          {step === 3 && (
             <>
               <p className="lead">
                 Omów z pracownikiem zadania, cele i potrzeby rozwojowe.
                 Następnie wybierz ocenę każdego kryterium.
               </p>
               <section>
+                <details>
+                  <summary>Ustalenia z rozmowy rozpoczynającej</summary>
+                  <MeetingSummary meeting={meeting} />
+                </details>
                 <details>
                   <summary>Przykłady do rozmowy</summary>
                   {selected
@@ -408,18 +430,18 @@ export function PeriodicWorkspace({ model }: { model: CompetencyModel }) {
                 )}
               </section>
               <div className="actions">
-                <button onClick={() => go(1)}>Wróć do obserwacji</button>
+                <button onClick={() => go(2)}>Wróć do obserwacji</button>
                 <button
                   className="primary"
                   disabled={!summaryReady}
-                  onClick={() => go(3)}
+                  onClick={() => go(4)}
                 >
                   Pokaż wynik <ArrowRight />
                 </button>
               </div>
             </>
           )}
-          {step === 3 && result.status === "scored" && (
+          {step === 4 && result.status === "scored" && (
             <>
               <section className="result">
                 <CircleCheck size={30} />
@@ -446,6 +468,10 @@ export function PeriodicWorkspace({ model }: { model: CompetencyModel }) {
                 </a>
               </section>
               <section>
+                <h2>Ustalenia początkowe</h2>
+                <MeetingSummary meeting={meeting} />
+              </section>
+              <section>
                 <h2>Decyzje przełożonego</h2>
                 {selected.map((c) => (
                   <div className="decision" key={c}>
@@ -462,7 +488,7 @@ export function PeriodicWorkspace({ model }: { model: CompetencyModel }) {
                 )}
               </section>
               <div className="actions">
-                <button onClick={() => go(2)}>
+                <button onClick={() => go(3)}>
                   <ArrowLeft /> Wróć do decyzji
                 </button>
               </div>

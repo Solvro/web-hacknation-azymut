@@ -385,3 +385,22 @@ summary {
     margin: 2rem;
   }
 }
+
+.field input[type="date"] {
+  width: auto;
+  height: auto;
+  max-width: 20rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.55rem 0.85rem;
+  font: inherit;
+}
+.meeting-summary dt {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+.meeting-summary dd {
+  margin: 0 0 0.75rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
