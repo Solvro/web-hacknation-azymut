@@ -1,20 +1,23 @@
 import { z } from "zod";
 import type { Source } from "./search.ts";
 
-export const generatedAnswer = z.object({
-  answer: z.string().trim().min(1).max(4500),
-  citations: z
-    .array(
-      z.object({
-        id: z.string(),
-        quote: z.string().trim().min(12).max(700),
-      }),
-    )
-    .min(1)
-    .max(6),
+export const generatedCitation = z.object({
+  id: z.string(),
+  quote: z.string().trim().min(12).max(700),
 });
 
-const whitespace = (value: string) => value.replace(/\s+/g, " ").trim();
+const generatedAnswer = z.object({
+  answer: z
+    .string()
+    .trim()
+    .min(1)
+    .max(4500)
+    .refine((value) => value.toLowerCase() !== "insufficient"),
+  citations: z.array(generatedCitation).min(1).max(6),
+});
+
+const whitespace = (value: string) =>
+  value.normalize("NFC").replace(/\s+/g, " ").trim();
 
 export function verifyAnswer(raw: unknown, context: Source[]) {
   const parsed = generatedAnswer.safeParse(raw);

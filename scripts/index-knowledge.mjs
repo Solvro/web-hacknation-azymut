@@ -12,7 +12,8 @@ const connectionString = process.env.DATABASE_URL;
 if (!config || !connectionString)
   throw new Error("Ustaw DATABASE_URL, AZYMUT_EMBED_URL i AZYMUT_EMBED_NAME.");
 const file = await readFile(
-  new URL("../data/knowledge.json", import.meta.url),
+  process.env.AZYMUT_KNOWLEDGE_FILE ||
+    new URL("../data/knowledge.json", import.meta.url),
   "utf8",
 );
 const sources = JSON.parse(file);

@@ -21,3 +21,4 @@
 - Kierujący komórką może pobrać gotowy arkusz pierwszej oceny z tej samej sesji demonstracyjnej. W Chrome potwierdzono ograniczenie zapisu oraz warunek ukończenia sprawy.
 - Dodano oznaczoną sprawę szkoleniową z pustą decyzją o kluczowej kompetencji oraz warunkową część III dla uzasadnionego wniosku o kolejny stopień służbowy. Zweryfikowano wznowienie demonstracji, zmianę oceny względem sugestii i PDF w Chrome.
 - Zintegrowano Dockerfile z równoległego PR-a z lokalnym Compose. W Chrome sprawdzono automatyczne tworzenie kont, odczyt modelu z wolumenu tylko do odczytu, zapis sprawy i wyświetlenie źródeł podczas awarii modelu.
+- Końcowy sprawdzian asystenta z Gemma 4 E4B i publicznymi aktami ELI przeszedł 12/12 przypadków automatycznej kontroli. Cztery jednoznaczne odpowiedzi są oznaczone jako objaśnienie reguły. Osobno potwierdzono odpowiedź rozmowną z cytatem fikcyjnej obserwacji oraz lokalne indeksowanie 240 fragmentów z bge-m3.

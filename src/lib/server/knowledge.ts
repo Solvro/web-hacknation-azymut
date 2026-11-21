@@ -9,7 +9,8 @@ import type { Source } from "../knowledge/search";
 
 export async function loadKnowledge() {
   const file = await readFile(
-    join(process.cwd(), "data", "knowledge.json"),
+    process.env.AZYMUT_KNOWLEDGE_FILE ||
+      join(process.cwd(), "data", "knowledge.json"),
     "utf8",
   );
   return {

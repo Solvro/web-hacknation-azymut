@@ -4,6 +4,7 @@ export interface Source {
   locator: string;
   text: string;
   url: string;
+  referenceId?: string;
   scope: "first" | "periodic" | "both";
   kind: "law" | "guide" | "model" | "faq" | "observation";
 }
@@ -98,7 +99,7 @@ const faq = [
     locators: ["§ 5 ust. 1", "§ 7"],
   },
   {
-    words: /jedynk|punkt|sredni|uzasadn|negatywn/,
+    words: /jedynk|punkt|sredni|uzasadn|negatywn|czastkow|wynik.*ocen/,
     source: "r2016",
     locators: ["§ 11 ust. 1", "§ 11 ust. 3", "§ 11 ust. 4"],
   },

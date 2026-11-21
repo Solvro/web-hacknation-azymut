@@ -75,7 +75,7 @@ Next.js App Router, TypeScript, shadcn/ui, Tailwind, pnpm i konfiguracja Solvro.
 
 **Hosting demo.** Planowane HTTPS na azymut.b.solvro.pl przez Coolify, osobna aplikacja i baza. Przeglądarka łączy się z aplikacją. Model dostępny wyłącznie dla backendu przez prywatny adres. Sesje obsługuje Better Auth z ciasteczkiem httpOnly. Vercel AI SDK korzysta z API zgodnego z OpenAI (Ollama lub vLLM). Adres i identyfikator modelu generującego oraz embeddingowego są konfigurowalne w środowisku. Przed etapem I trzeba sprawdzić rzeczywisty publiczny URL na urządzeniu bez VPN.
 
-**Blokada GPU.** Ponowna próba połączenia z endpointem Ollamy na stacji 21 listopada nie powiodła się. Lokalny laptop użyty do przeglądu nie miał polecenia Ollama w PATH. Nie zakładamy dostępności konkretnej karty ani liczby równoległych rozmów.
+**Status modelu.** Właściwa stacja Solvro odpowiada przez prywatną sieć. Próby z kompletem materiałów partnera wykonujemy lokalnie. Wdrożenie zdalne materiałów wymaga uzgodnienia zakresu udostępnienia. Konfiguracja modelu i ścieżka awaryjna są opisane w README.
 
 | Kiedy | Działanie i warunek odbioru |
 |---|---|

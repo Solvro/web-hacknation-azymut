@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { BookOpen } from "lucide-react";
 
+type Mode = "formal" | "conversation";
 type Evidence = { label: string; text: string };
 type Reply = {
   status:
@@ -14,6 +15,7 @@ type Reply = {
     | "unverified"
     | "invalid";
   answer?: string;
+  method?: "rule" | "model";
   sources?: {
     id: string;
     title: string;
@@ -42,12 +44,12 @@ export function AssistantPanel({
   scope: "first" | "periodic";
   evidence: Evidence[];
 }) {
-  const [mode, setMode] = useState<"formal" | "conversation">("formal");
+  const [mode, setMode] = useState<Mode>("formal");
   const [question, setQuestion] = useState("");
   const [busy, setBusy] = useState(false);
-  const [thread, setThread] = useState<{ question: string; reply: Reply }[]>(
-    [],
-  );
+  const [thread, setThread] = useState<
+    { question: string; mode: Mode; reply: Reply }[]
+  >([]);
   return (
     <section className="assistant-panel">
       <details>
@@ -85,6 +87,9 @@ export function AssistantPanel({
                   scope,
                   mode,
                   question: asked,
+                  previousQuestion: thread.findLast(
+                    (message) => message.mode === mode,
+                  )?.question,
                   evidence: mode === "conversation" ? evidence.slice(0, 8) : [],
                 }),
               });
@@ -94,7 +99,7 @@ export function AssistantPanel({
             }
             setThread((previous) => [
               ...previous.slice(-7),
-              { question: asked, reply },
+              { question: asked, mode, reply },
             ]);
             setQuestion("");
             setBusy(false);
@@ -131,6 +136,9 @@ export function AssistantPanel({
           {thread.map((message, i) => (
             <article key={i}>
               <h3>{message.question}</h3>
+              {message.reply.method === "rule" && (
+                <small>Odpowiedź z reguły i przepisu</small>
+              )}
               <p className="whitespace-pre-wrap wrap-anywhere">
                 {message.reply.status === "answered"
                   ? message.reply.answer

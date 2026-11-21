@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { searchSources } from "./search.ts";
+import { formalRuleAnswer } from "./formal-rules.ts";
 import { verifyAnswer } from "./verify.ts";
 
 const art = {
@@ -40,6 +41,10 @@ test("akceptuje cytat wyłącznie z przekazanej jednostki", () => {
   assert.ok(verifyAnswer(output, [art]));
   assert.equal(verifyAnswer(output, [section]), null);
   assert.equal(
+    verifyAnswer({ ...output, answer: "insufficient" }, [art]),
+    null,
+  );
+  assert.equal(
     verifyAnswer(
       {
         ...output,
@@ -50,4 +55,24 @@ test("akceptuje cytat wyłącznie z przekazanej jednostki", () => {
     null,
   );
   assert.equal(verifyAnswer({ ...output, citations: [] }, [art]), null);
+});
+
+test("objaśnia skutki podanej oceny 1 pkt tylko dla okresowej i z właściwą jednostką", () => {
+  const ruleSource = {
+    ...art,
+    id: "r2016-1",
+    locator: "§ 11 ust. 1",
+    text: "przyznaniu oceny negatywnej, a także w przypadku uzyskania przez ocenianego co najmniej jednej z ocen cząstkowych na poziomie znacznie poniżej oczekiwań.",
+  };
+  const question = "Ocena cząstkowa to 1 punkt. Jaki jest wynik oceny?";
+  assert.match(
+    formalRuleAnswer(question, "periodic", [ruleSource]).answer,
+    /negatywny/,
+  );
+  assert.equal(formalRuleAnswer(question, "first", [ruleSource]), null);
+  assert.equal(formalRuleAnswer(question, "periodic", [art]), null);
+  assert.equal(
+    formalRuleAnswer("Jaką ocenę mam dać?", "periodic", [ruleSource]),
+    null,
+  );
 });

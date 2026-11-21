@@ -49,6 +49,7 @@ export function faqSources(corpus: Source[]): Source[] {
           {
             ...source,
             id: "faq-" + index,
+            referenceId: source.id,
             title: "Pytania i odpowiedzi Azymutu",
             locator: question,
             text: answer + " Podstawa: " + source.title + ", " + locator + ".",

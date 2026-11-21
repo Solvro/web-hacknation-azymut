@@ -12,6 +12,7 @@
     "start": "next start",
     "knowledge:import": "python3 scripts/import-model.py && uv run --script scripts/import-knowledge.py",
     "knowledge:index": "node --env-file-if-exists=.env.local scripts/index-knowledge.mjs",
+    "eval": "node --env-file-if-exists=.env.local scripts/eval-assistant.mjs",
     "db:setup": "node --env-file-if-exists=.env.local scripts/setup-db.mjs",
     "typecheck": "tsc --noEmit"
   },
