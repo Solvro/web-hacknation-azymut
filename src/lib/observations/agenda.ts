@@ -5,6 +5,7 @@ import type { SavedNote } from "./notes.ts";
 type AgendaExample = {
   id: string;
   text: string;
+  quote?: string;
   date?: string;
   gap: SavedNote["gap"];
 };

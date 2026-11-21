@@ -24,6 +24,7 @@ export function trainingAssessment(model: CompetencyModel): PeriodicDraft {
       communication: 5,
     },
     interview: false,
+    periodFrom: "2024-11-21",
     justification: "",
     developmentNotes: "",
     meeting: {

@@ -21,9 +21,11 @@ export const savedNote = z.object({
   id: z.uuid(),
   text: noteText,
   date: observationDate.optional(),
+  quote: noteText.optional(),
   indicatorId: z.string().max(80).nullable(),
   gap: gap.nullable(),
-});
+})
+  .refine(({ text, quote }) => !quote || text.includes(quote));
 export type SavedNote = z.infer<typeof savedNote>;
 
 export const gapQuestions: Record<Gap, string> = {
@@ -35,6 +37,14 @@ export const gapQuestions: Record<Gap, string> = {
 
 export function splitNotes(text: string) {
   return text.trim().split(/\r?\n[\t ]*\r?\n/u).map((note) => note.trim()).filter(Boolean);
+}
+
+export function dateFromNote(text: string) {
+  const start = text.replace(/^data obserwacji:\s*/iu, "");
+  const iso = /^([0-9]{4}-[0-9]{2}-[0-9]{2})(?=$|[\s:;,–—])/u.exec(start)?.[1];
+  const polish = /^(\d{1,2})\.(\d{1,2})\.(\d{4})\.?(?=$|[\s:;,–—])/u.exec(start);
+  const candidate = iso ?? (polish ? `${polish[3]}-${polish[2].padStart(2, "0")}-${polish[1].padStart(2, "0")}` : "");
+  return observationDate.safeParse(candidate).data || undefined;
 }
 
 export function verifyNoteSuggestions(

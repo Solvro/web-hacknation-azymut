@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { maxSavedNotes, savedNote } from "../observations/notes.ts";
+import { maxSavedNotes, observationDate, savedNote } from "../observations/notes.ts";
 import { maxPlannedIndicators, positionText } from "../observations/position.ts";
 import {
   criteria,
@@ -52,6 +52,9 @@ const schema = z.object({
   plannedIndicators: z.array(z.string().max(80)).max(maxPlannedIndicators).optional(),
   decisions: z.partialRecord(criterion, points.nullable()),
   interview: z.boolean(),
+  conversationDate: observationDate.optional(),
+  periodFrom: observationDate.optional(),
+  periodTo: observationDate.optional(),
   justification: z.string(),
   developmentNotes: z.string().default(""),
   civilServant: z.boolean().optional(),

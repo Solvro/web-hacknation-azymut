@@ -10,6 +10,8 @@ import { AssistantPanel } from "./assistant-panel";
 import { trainingAssessment } from "../lib/drafts/demo";
 import { CriterionSuggestion } from "./criterion-suggestion";
 import { ObservationInbox } from "./observation-inbox";
+import { ObservationEvidence } from "./observation-evidence";
+import { assessmentCopy } from "../lib/observations/assessment-copy";
 import { PositionPlanner } from "./position-planner";
 import { maxPlannedIndicators } from "../lib/observations/position";
 import { ObservationJournal } from "./observation-journal";
@@ -213,11 +215,14 @@ function AssessmentEditor({
   const [positionDescription, setPositionDescription] = useState(initial?.positionDescription ?? "");
   const [plannedIndicators, setPlannedIndicators] = useState(initial?.plannedIndicators ?? []);
   const [notes, setNotes] = useState<SavedNote[]>(initial?.notes ?? []);
-  const indicatorHeading = useRef<HTMLLegendElement>(null);
+  const indicatorHeading = useRef<HTMLHeadingElement>(null);
   const [decisions, setDecisions] = useState<Decisions>(
     initial?.decisions ?? {},
   );
   const [interview, setInterview] = useState(initial?.interview ?? false);
+  const [conversationDate, setConversationDate] = useState(initial?.conversationDate ?? "");
+  const [periodFrom, setPeriodFrom] = useState(initial?.periodFrom ?? "");
+  const [periodTo, setPeriodTo] = useState(initial?.periodTo ?? "");
   const [justification, setJustification] = useState(
     initial?.justification ?? "",
   );
@@ -247,6 +252,9 @@ function AssessmentEditor({
     plannedIndicators,
     decisions,
     interview,
+    conversationDate,
+    periodFrom,
+    periodTo,
     justification,
     developmentNotes,
     civilServant,
@@ -271,6 +279,12 @@ function AssessmentEditor({
   const indicators = model.competencies[key];
   const indicator = indicators[index];
   const agenda = buildConversationAgenda(model, selected, notes, examples, ratings);
+  const currentNotes = notes.filter(({ indicatorId }) => indicatorId === indicator.id);
+  const noteIndicatorIds = [...new Set(notes.flatMap(({ indicatorId }) => indicatorId ? [indicatorId] : []))];
+  const nextNoteIndicator = noteIndicatorIds.find((id) =>
+    id !== indicator.id && (!ratings[id] || ratings[id] === "pending"),
+  );
+  const suggestedCopy = assessmentCopy(agenda, decisions, meeting.goals);
   const result = periodicResult(form, extra, decisions);
   const summaryReady =
     result.status === "scored" &&
@@ -323,7 +337,7 @@ function AssessmentEditor({
     setStep(2);
     requestAnimationFrame(() => {
       indicatorHeading.current?.focus({ preventScroll: true });
-      indicatorHeading.current?.scrollIntoView({ block: "center" });
+      indicatorHeading.current?.scrollIntoView({ block: "start" });
     });
   }
 
@@ -509,9 +523,14 @@ function AssessmentEditor({
               sample={initial?.sample === "training"}
               hidden={step !== 2}
               savedCount={notes.length}
-              onSave={(note) => {
-                setNotes((previous) => [...previous, note]);
-                if (note.indicatorId) openIndicator(note.indicatorId);
+              onSave={(batch, finished) => {
+                setNotes((previous) => [...previous, ...batch]);
+                if (!finished) return;
+                const pending = [...batch, ...notes].find(({ indicatorId }) =>
+                  indicatorId && (!ratings[indicatorId] || ratings[indicatorId] === "pending"),
+                );
+                if (pending?.indicatorId) openIndicator(pending.indicatorId);
+                else go(3);
               }}
             />
           )}
@@ -534,6 +553,7 @@ function AssessmentEditor({
                 />
               )}
               <section>
+                <h2 ref={indicatorHeading} tabIndex={-1}>Wybierz zaobserwowane zachowanie</h2>
                 <label className="field">
                   Kryterium
                   <select
@@ -568,17 +588,21 @@ function AssessmentEditor({
                     </button>
                   </div>
                 </div>
+                {currentNotes.length > 0 && (
+                  <div className="indicator-evidence">
+                    <h3>Zapisane przykłady dla tego wskaźnika</h3>
+                    {currentNotes.map((note) => (
+                      <div key={note.id}>
+                        {note.date && <small><time dateTime={note.date}>{note.date.split("-").reverse().join(".")}</time></small>}
+                        <ObservationEvidence quote={note.quote} text={note.text} />
+                        {note.gap && <p>{gapQuestions[note.gap]}</p>}
+                      </div>
+                    ))}
+                    <p>Na podstawie tych przykładów wybierz najtrafniejszy opis poniżej.</p>
+                  </div>
+                )}
                 <fieldset>
-                  <legend ref={indicatorHeading} tabIndex={-1}>{indicator.label}</legend>
-                  {notes.filter(({ indicatorId }) => indicatorId === indicator.id).map((note) => (
-                    <article key={note.id} className="observation-card">
-                      <p className="observation-original">
-                        {note.date && <small><time dateTime={note.date}>{note.date}</time></small>}
-                        {note.text}
-                      </p>
-                      {note.gap && <p>{gapQuestions[note.gap]}</p>}
-                    </article>
-                  ))}
+                  <legend>{indicator.label}</legend>
                   {indicator.levels.map((description, i) => (
                     <label className="option" key={i}>
                       <input
@@ -614,10 +638,10 @@ function AssessmentEditor({
                   ))}
                 </fieldset>
                 <label className="field">
-                  Przykład z pracy
+                  {currentNotes.length > 0 ? "Uzupełnienie do zapisanych przykładów (opcjonalnie)" : "Przykład z pracy (opcjonalnie)"}
                   <textarea
                     value={examples[indicator.id] ?? ""}
-                    placeholder="Sytuacja, działanie i rezultat"
+                    placeholder={currentNotes.length > 0 ? "Dodaj szczegół tylko wtedy, gdy jest potrzebny" : "Sytuacja, działanie i rezultat"}
                     onChange={(e) => {
                       setExamples({
                         ...examples,
@@ -633,7 +657,12 @@ function AssessmentEditor({
                 />
               </section>
               <div className="actions">
-                <button className="primary" onClick={() => go(3)}>
+                {nextNoteIndicator && (
+                  <button className="primary" onClick={() => openIndicator(nextNoteIndicator)}>
+                    Następny wskaźnik z notatką <ArrowRight />
+                  </button>
+                )}
+                <button className={nextNoteIndicator ? undefined : "primary"} onClick={() => go(3)}>
                   Przygotuj rozmowę <ArrowRight />
                 </button>
               </div>
@@ -659,11 +688,22 @@ function AssessmentEditor({
                     checked={interview}
                     onChange={(e) => {
                       setInterview(e.target.checked);
-                      if (!e.target.checked) setDecisions({});
+                      if (!e.target.checked) {
+                        setDecisions({});
+                        setConversationDate("");
+                      }
                     }}
                   />
                   Rozmowa oceniająca odbyła się.
                 </label>
+                {interview && (
+                  <label className="field observation-date">
+                    Data rozmowy oceniającej
+                    <input type="date" min={meeting.date} value={conversationDate} onChange={(event) =>
+                      setConversationDate(event.target.validity.valid ? event.target.value : "")
+                    } />
+                  </label>
+                )}
                 {selected.map((c) => {
                   return (
                     <div key={c} className="decision">
@@ -710,6 +750,14 @@ function AssessmentEditor({
                     placeholder="Jaką umiejętność warto rozwinąć? Jakie działanie omówiliście podczas rozmowy?"
                   />
                 </label>
+                {!developmentNotes.trim() && suggestedCopy.development && (
+                  <div className="assessment-copy">
+                    <p>{suggestedCopy.development}</p>
+                    <button type="button" onClick={() => setDevelopmentNotes(suggestedCopy.development)}>
+                      Wstaw propozycję do wniosków
+                    </button>
+                  </div>
+                )}
                 {result.status === "scored" && (
                   <label className="field">
                     {result.positive
@@ -720,6 +768,15 @@ function AssessmentEditor({
                       onChange={(e) => setJustification(e.target.value)}
                     />
                   </label>
+                )}
+                {result.status === "scored" && !justification.trim() && suggestedCopy.justification && (
+                  <details className="assessment-copy">
+                    <summary>Propozycja uzasadnienia z decyzji i przykładów</summary>
+                    <p>{suggestedCopy.justification}</p>
+                    <button type="button" onClick={() => setJustification(suggestedCopy.justification)}>
+                      Wstaw propozycję do uzasadnienia
+                    </button>
+                  </details>
                 )}
                 {result.status === "scored" && result.positive && (
                   <details>
@@ -832,11 +889,20 @@ function AssessmentEditor({
               >
                 <label className="field">
                   Początek ocenianego okresu
-                  <input required name="periodFrom" type="date" />
+                  <input required name="periodFrom" type="date"
+                    value={periodFrom || meeting.anchor || ""}
+                    max={periodTo || conversationDate || undefined}
+                    onChange={(event) => setPeriodFrom(event.target.value)} />
+                  {!periodFrom && meeting.anchor && <small>Wstawiono datę zdarzenia rozpoczynającego. Sprawdź początek okresu.</small>}
                 </label>
                 <label className="field">
                   Koniec ocenianego okresu
-                  <input required name="periodTo" type="date" />
+                  <input required name="periodTo" type="date"
+                    value={periodTo || conversationDate}
+                    min={periodFrom || meeting.anchor || undefined}
+                    max={conversationDate || undefined}
+                    onChange={(event) => setPeriodTo(event.target.value)} />
+                  {!periodTo && conversationDate && <small>Wstawiono datę rozmowy. Zmień ją, jeśli okres zakończył się wcześniej.</small>}
                 </label>
                 <label className="field">
                   Data rozmowy oceniającej
@@ -845,6 +911,8 @@ function AssessmentEditor({
                     name="conversation"
                     type="date"
                     min={meeting.date}
+                    value={conversationDate}
+                    onChange={(event) => setConversationDate(event.target.value)}
                   />
                 </label>
               </AssessmentDownload>
