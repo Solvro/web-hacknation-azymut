@@ -1,6 +1,6 @@
 # Azymut — Kompas Kompetencji w służbie cywilnej
 
-**Przełożony wybiera zachowanie, które zaobserwował u pracownika. Azymut pokazuje, jak z tych obserwacji wynika sugestia. Po rozmowie z pracownikiem przełożony sam wybiera ocenę, która trafia do arkusza.** To jedno zadanie powinno dać się zrozumieć na pierwszym ekranie i wykonać bez instruktażu zespołu.
+**Przełożony zaczyna od przykładów z pracy. Azymut odnajduje pasujące wskaźniki i przygotowuje agendę rozmowy. Przełożony wybiera obserwowane zachowania, sprawdza wyliczoną sugestię i po rozmowie sam wybiera ocenę, która trafia do arkusza.**
 
 Dokument opisuje projekt prototypu. Kryteria odbioru poniżej służą do sprawdzenia działającej wersji przed zgłoszeniem.
 
@@ -15,7 +15,7 @@ Regulamin zadania (§ 2) przewiduje co najmniej trzy osoby ze znajomością dzie
 | Zgodność z zadaniem · 25% | Obie ścieżki prowadzą do właściwych formularzy. Juror może porównać ostateczną decyzję i wynik na ekranie z pobranym PDF. |
 | Użyteczność · 25% | Juror rozpoznaje następny krok, wznawia szkic i widzi, co ma jeszcze uzupełnić. Potrafi wyjaśnić różnicę między obserwacją, sugestią a decyzją. |
 | AI · 20% | Juror zadaje własne pytanie o każdą procedurę, otwiera wskazany przepis i przygotowuje pytania do rozmowy na podstawie własnych przykładów. |
-| Innowacyjność i jakość · 20% | Przejście od konkretnego zachowania przez jawne wyliczenie do rozmowy o rozwoju. Przy braku obserwacji system zachowuje tę informację i sygnalizuje luki. |
+| Innowacyjność i jakość · 20% | Juror wpisuje własne notatki, sprawdza cytaty z oryginału, przechodzi do wskazanego miejsca w modelu MC i przygotowuje rozmowę na podstawie zapisanych przykładów i luk. |
 | Wdrożenie · 10% | HR wysyła przypomnienie, przełożony je odbiera. Dostęp ograniczają role. README pokazuje uruchomienie, działające API, licencje, ograniczenia i przyszłe integracje. |
 
 ## Dwie ścieżki
@@ -56,6 +56,21 @@ Model MC zawiera 14 kompetencji i 49 wskaźników, każdy z pięcioma opisami. Z
 Z grafiki partnera zachowujemy dwa wejścia, nazwy modułów oraz niebieski akcent pierwszej oceny i fiolet okresowej. Wewnątrz sprawy nagłówek stale pokazuje rodzaj oceny, stanowisko i etap. Nawigacja prowadzi przez części formularza. Treść na białym tle, tekst granatowy, główna akcja fioletowa. Zielony i różowy z grafiki oznaczają odpowiednio rozpoczęcie i zakończenie. Każdemu kolorowi towarzyszy tekst. Projektujemy dla desktopu, bez wersji smartfonowej. Bazowe kolory to granat #1C1A3A, fiolet #5B45D6, niebieski #1F5FCC i morski #0F6E7A dla odnośników do źródeł. Tekst opisów zachowań zachowuje jeden rozmiar również na najdłuższej karcie.
 
 **Ekran obserwacji.** Jednocześnie pokazujemy jeden wskaźnik, np. drugi z czterech w „Komunikacji”. Pytanie „Które zachowanie obserwowałaś lub obserwowałeś?” prowadzi do pięciu pełnych opisów w pionowej grupie wyboru. Szósta opcja brzmi „Brak podstaw do oceny”. Po wyborze jest miejsce na sytuację, działanie i rezultat. Przy przejściu dalej zapisujemy szkic. Widać postęp, status zapisu i możliwość powrotu. Sugestia jest podpisanym wyliczeniem, a decyzja osobnym, początkowo pustym polem. Brzmienie opisów MC pozostaje dostępne w całości.
+
+## Od notatek do rozmowy
+
+Ścieżka okresowa B/C przyjmuje kilka notatek w zwykłym tekście, po jednej na akapit, z opcjonalną datą. Asystent proponuje wskaźniki wyłącznie z kryteriów sprawy i wskazuje dosłowny fragment każdej notatki. Ogólną opinię lub niejednoznaczny przykład można zapisać jako kwestię do rozmowy. Dopasowanie można zmienić, odrzucić lub potwierdzić. Serwer weryfikuje identyfikatory, wersję modelu i obecność cytatów przed wyświetleniem propozycji. Awaria zostawia treść gotową do ponowienia lub ręcznego przypisania. Propozycje nie zmieniają poziomu zachowania ani decyzji.
+
+Potwierdzone notatki trafiają do dziennika sprawy. Kilka przykładów może dotyczyć tego samego wskaźnika. Punktacja nadal używa jednego wyboru zachowania na wskaźnik. Agenda łączy oczekiwania i cele, otwarte kwestie, przykłady do porównania i obszary bez potwierdzonych przykładów. Pokazuje daty i rozkład po miesiącach, jeśli podano daty, oraz pozwala wrócić do wskaźnika. PDF pobiera wyłącznie właściwe pola arkusza i decyzje przełożonego. Surowych notatek nie udostępniamy roli HR.
+
+| Iteracja | Zakres i warunek odbioru |
+|---|---|
+| 1 | Notatki → zweryfikowane dopasowania → wybór wskaźnika. Próba z opisem działania, ogólną opinią, zmienionym dopasowaniem i niedostępnym modelem. |
+| 2 | Dziennik i agenda z datami, lukami i powrotem do wskaźnika. Próba wznowienia sprawy, aktualizacji agendy i przejścia od sugestii do podjętej decyzji w PDF. |
+| 3 | OSP → propozycja arkusza, dodatkowych kryteriów i wskaźników z cytatami obowiązków. Przełożony potwierdza każdy proponowany zakres. Próba z bezpośrednim kierowaniem i niejednoznacznym OSP. |
+| 4 | Kolejka HR według faktycznego stanu sprawy oraz automatyczne przypomnienie w aplikacji przed terminem. Próba izolacji ról, ponownego wywołania i obsługi zamkniętej sprawy. |
+
+Każdą iterację sprawdzamy testami kodu i przejściem w aplikacji, zapisujemy wynik w `PROGRESS.md`, commitujemy i wypychamy na `origin`. Demo korzysta z syntetycznych danych i rzeczywistego modelu, jeśli jest dostępny. Główne demo obejmuje ciąg notatki, wskaźniki, agenda, decyzja i PDF.
 
 **Asystent.** Przycisk otwiera zakładki „Asystent formalny oceny” i „Asystent rozmowy”. Na mniejszym ekranie laptopa panel nakłada się na widok i po zamknięciu przywraca fokus. Podpowiedzi nie zasłaniają opcji wyboru podczas oceniania. Kliknięcie źródła otwiera konkretny fragment z nazwą aktu i jednostką lub stroną poradnika.
 
@@ -103,7 +118,7 @@ Przed produkcją urząd musi ustalić retencję, uprawnienia, procedurę podpisu
 | Do 09:30 | Weryfikacja formularzy, odpowiedzi na nowe pytania i działania bez modelu, poprawki, slajdy i README. Dodatki wyłącznie po odbiorze obowiązkowych funkcji. |
 | 10:30–11:00 w niedzielę | Zamrożenie wersji, finalizacja zgłoszenia i sprawdzenie każdego linku poza kontem zespołu. Po 11:00 kończymy zmiany. |
 
-**W pierwszej kolejności tniemy** import dowolnych DOCX (wystarczy wybór syntetycznego OSP z uzasadnieniem), porównywanie wielu modeli, automatyczną redakcję uzasadnień, trening rozmowy, wykresy HR i edycję FAQ. Strażnik języka jest dodatkiem: wskazuje tekst do przemyślenia i prosi o fakt z pracy. Status w dzienniku i wysyłka e-mail nie zastępują doręczenia przypomnienia w aplikacji.
+**W pierwszej kolejności tniemy** import plików DOCX, porównywanie wielu modeli, automatyczną redakcję uzasadnień, trening rozmowy, wykresy HR i edycję FAQ. Analiza OSP przyjmuje wklejony tekst. Przypomnienie trafia do skrzynki przełożonego w aplikacji.
 
 **Odbiór przed wysłaniem.** W nowej sesji testujący kończy obie procedury, otwiera każdy z trzech PDF, sprawdza dane, układ i miejsca podpisów. W dwóch sesjach równocześnie sprawdza izolację oraz reset własnych danych. Z roli HR wysyła przypomnienie i odczytuje je jako przełożony. Osobno sprawdza pytanie o każdą procedurę, prośbę o plan rozmowy, odmowę i awarię. Projekt opisuje jako działające wyłącznie elementy, które przeszły tę próbę.
 
@@ -114,8 +129,8 @@ Przed produkcją urząd musi ustalić retencję, uprawnienia, procedurę podpisu
 | Czas | Co robi juror lub prezenter |
 |---|---|
 | 0:00–0:20 | Rozpoczyna okresową, otwiera zadanie z OSP, potwierdza B i wybiera kryteria na rozmowę rozpoczynającą. |
-| 0:20–0:55 | Wznawia przygotowany etap końcowy tej historii. Wybiera opis zachowania, dodaje przykład i otwiera wyliczenie sugestii. |
-| 0:55–1:20 | Otwiera pytanie do rozmowy, odnotowuje jej wniosek i sam wybiera ostatnią ocenę cząstkową. Pokazuje to samo pole w PDF. |
+| 0:20–0:55 | Wznawia przygotowany etap końcowy i analizuje trzy notatki. Sprawdza cytat, otwiera opis zachowania i wybiera zaobserwowany poziom. |
+| 0:55–1:20 | Otwiera agendę i pokazuje pytanie o brakujący konkret. Odnotowuje wniosek, wybiera ostatnią ocenę cząstkową i pokazuje tę decyzję w PDF. |
 | 1:20–1:50 | Oddaje klawiaturę jurorowi. Przykładowe pytanie na start: „Co z terminem okresowej przy trzech miesiącach usprawiedliwionej nieobecności?”. Otwiera art. 81 ust. 7 przy odpowiedzi. |
 | 1:50–2:00 | Wskazuje drugą ścieżkę i skrzynkę przypomnień. Pełne przejście pustej sprawy pozostaje dostępne bez limitu czasu demo. |
 
