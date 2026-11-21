@@ -8,6 +8,8 @@ import { AssistantPanel } from "./assistant-panel";
 
 import { trainingAssessment } from "../lib/drafts/demo";
 import { CriterionSuggestion } from "./criterion-suggestion";
+import { ObservationInbox } from "./observation-inbox";
+import { gapQuestions, type SavedNote } from "../lib/observations/notes";
 
 import {
   emptyMeeting,
@@ -15,7 +17,7 @@ import {
   OpeningMeetingForm,
 } from "./opening-meeting";
 import { AssessmentDownload } from "./assessment-download";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   draftStorageKey,
   readPeriodicDraft,
@@ -202,6 +204,8 @@ function AssessmentEditor({
   const [examples, setExamples] = useState<Record<string, string>>(
     initial?.examples ?? {},
   );
+  const [notes, setNotes] = useState<SavedNote[]>(initial?.notes ?? []);
+  const indicatorHeading = useRef<HTMLLegendElement>(null);
   const [decisions, setDecisions] = useState<Decisions>(
     initial?.decisions ?? {},
   );
@@ -230,6 +234,7 @@ function AssessmentEditor({
     index,
     ratings,
     examples,
+    notes,
     decisions,
     interview,
     justification,
@@ -273,6 +278,20 @@ function AssessmentEditor({
   function invalidateDecision() {
     setDecisions((previous) => ({ ...previous, [key]: null }));
     setInterview(false);
+  }
+
+  function openIndicator(id: string) {
+    const criterionIndex = selected.findIndex((criterion) =>
+      model.competencies[criterion].some((item) => item.id === id),
+    );
+    if (criterionIndex < 0) return;
+    setActive(criterionIndex);
+    setIndex(model.competencies[selected[criterionIndex]].findIndex((item) => item.id === id));
+    setStep(2);
+    requestAnimationFrame(() => {
+      indicatorHeading.current?.focus({ preventScroll: true });
+      indicatorHeading.current?.scrollIntoView({ block: "center" });
+    });
   }
 
   return (
@@ -430,6 +449,17 @@ function AssessmentEditor({
                 Wybierz zachowania z modelu MC, które udało się zaobserwować w
                 ocenianym okresie.
               </p>
+              <ObservationInbox
+                model={model}
+                form={form}
+                extra={extra}
+                sample={initial?.sample === "training"}
+                savedCount={notes.length}
+                onSave={(note) => {
+                  setNotes((previous) => [...previous, note]);
+                  if (note.indicatorId) openIndicator(note.indicatorId);
+                }}
+              />
               <section>
                 <label className="field">
                   Kryterium
@@ -466,7 +496,13 @@ function AssessmentEditor({
                   </div>
                 </div>
                 <fieldset>
-                  <legend>{indicator.label}</legend>
+                  <legend ref={indicatorHeading} tabIndex={-1}>{indicator.label}</legend>
+                  {notes.filter(({ indicatorId }) => indicatorId === indicator.id).map((note) => (
+                    <article key={note.id} className="observation-card">
+                      <p className="observation-original">{note.text}</p>
+                      {note.gap && <p>{gapQuestions[note.gap]}</p>}
+                    </article>
+                  ))}
                   {indicator.levels.map((description, i) => (
                     <label className="option" key={i}>
                       <input

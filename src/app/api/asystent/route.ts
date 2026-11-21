@@ -2,7 +2,7 @@ import { requireApiRole } from "../../../lib/server/access";
 import { loadKnowledge, searchEmbedding } from "../../../lib/server/knowledge";
 import { formalRuleAnswer } from "../../../lib/knowledge/formal-rules";
 import { faqSources } from "../../../lib/knowledge/faq";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { languageModel } from "../../../lib/server/language-model";
 import { generateText, NoObjectGeneratedError, Output, streamText } from "ai";
 import { z } from "zod";
 import {
@@ -201,31 +201,16 @@ async function answerQuestion(
   }));
   if (!context.length) return { status: "insufficient" };
   const sources = relevant.slice(0, 3);
-  if (!process.env.AZYMUT_MODEL_URL || !process.env.AZYMUT_MODEL_NAME) {
+  const connection = languageModel(signal);
+  if (!connection) {
     return { status: "model-unavailable", sources };
   }
   let providerFailed = false;
   try {
     stream?.progress("writing");
-    const provider = createOpenAICompatible({
-      name: "azymut-internal",
-      baseURL: process.env.AZYMUT_MODEL_URL,
-      apiKey: process.env.AZYMUT_MODEL_TOKEN || undefined,
-      supportsStructuredOutputs: true,
-    });
     const options = {
-      model: provider.chatModel(process.env.AZYMUT_MODEL_NAME),
+      ...connection,
       output: Output.object({ schema: outputSchema }),
-      providerOptions:
-        process.env.AZYMUT_MODEL_NAME === "gemma4:12b" ||
-        process.env.AZYMUT_DISABLE_REASONING === "1"
-          ? { azymutInternal: { reasoningEffort: "none" } }
-          : undefined,
-      abortSignal: AbortSignal.any([
-        signal,
-        AbortSignal.timeout(modelTimeout()),
-      ]),
-      maxRetries: 0,
       maxOutputTokens: 900,
       temperature: 0.15,
       system: [
@@ -296,13 +281,4 @@ async function answerQuestion(
       return { status: "unverified", sources };
     return { status: "model-unavailable", sources };
   }
-}
-
-function modelTimeout() {
-  const configured = Number(process.env.AZYMUT_MODEL_TIMEOUT_MS);
-  return Number.isInteger(configured) &&
-    configured >= 1000 &&
-    configured <= 120000
-    ? configured
-    : 25000;
 }

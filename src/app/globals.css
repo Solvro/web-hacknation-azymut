@@ -676,3 +676,33 @@ details.disclosure > summary small {
 details.disclosure > p {
   color: var(--muted);
 }
+
+.observation-inbox {
+  border-color: #cabdf5;
+  background: #fcfaff;
+}
+.observation-cards {
+  display: grid;
+  gap: 0.875rem;
+  margin-top: 1rem;
+}
+.observation-card {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+}
+.observation-card select {
+  width: 100%;
+}
+.observation-original {
+  margin: 0 0 0.75rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.observation-original mark {
+  padding: 0.05em 0.15em;
+  background: #ece5fc;
+  color: inherit;
+}

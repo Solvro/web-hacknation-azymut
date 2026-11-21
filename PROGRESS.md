@@ -1,5 +1,7 @@
 # Postęp Azymutu
 
+- 21 listopada — dodano analizę notatek okresowych, zweryfikowane cytaty i ręczne przypisanie z przejściem do wskaźnika. Gemma 4 12B na stacji Solvro poprawnie dopasowała dwa przykłady i rozpoznała brak konkretu w trzecim (ok. 2,7 s od żądania w tej próbie). W Chrome z kontrolowanym modelem sprawdzono zmianę dopasowania, zachowanie pustego pola punktacji, wznowienie szkicu, odrzucenie zmyślonego cytatu i ręczne przypisanie po awarii. Przeszło 27 testów i kontrola typów.
+
 - 21 listopada — uzgodniono iteracje, które rozszerzają ocenę okresową o analizę notatek, dziennik i agendę, analizę OSP oraz kolejkę kadr z automatycznym przypomnieniem. Zaktualizowano warunki odbioru i scenariusz demo w CONCEPT.md.
 
 - 21 listopada — przegląd koncepcji na podstawie zadania, obu regulaminów, materiałów MC i wzorów arkuszy. Poprawiono kolejność rozmowy i oceny, reguły sugestii, priorytety MVP, zakres panelu HR, próbę samodzielną jury i plan finału. Dodano do ignorowanych materiałów tekst jednolity ustawy (Dz.U. 2026 poz. 590).

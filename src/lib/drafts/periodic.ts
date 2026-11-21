@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { maxSavedNotes, savedNote } from "../observations/notes.ts";
 import {
   criteria,
   periodicCriteria,
@@ -45,6 +46,7 @@ const schema = z.object({
     z.union([points, z.enum(["pending", "unobserved", "outside_scope"])]),
   ),
   examples: z.record(z.string(), z.string()),
+  notes: z.array(savedNote).max(maxSavedNotes).optional(),
   decisions: z.partialRecord(criterion, points.nullable()),
   interview: z.boolean(),
   justification: z.string(),
@@ -76,6 +78,15 @@ export function readPeriodicDraft(
     )
   ) {
     throw new Error("Obserwacja spoza wybranych kryteriów.");
+  }
+  const notes = draft.notes ?? [];
+  if (
+    new Set(notes.map(({ id }) => id)).size !== notes.length ||
+    notes.some(({ indicatorId, gap }) =>
+      indicatorId === null ? gap === null : !ids.has(indicatorId),
+    )
+  ) {
+    throw new Error("Niepoprawna notatka w sprawie.");
   }
   if (
     Object.keys(draft.decisions).some(
