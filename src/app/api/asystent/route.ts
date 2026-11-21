@@ -1,9 +1,8 @@
 import { requireApiRole } from "../../../lib/server/access";
+import { loadKnowledge, searchEmbedding } from "../../../lib/server/knowledge";
 import { faqSources } from "../../../lib/knowledge/faq";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { generateText, Output } from "ai";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { z } from "zod";
 import {
   normalize,
@@ -46,20 +45,22 @@ export async function POST(request: Request) {
   ) {
     return Response.json({ status: "decision" });
   }
-  let corpus: Source[];
+  let knowledge: Awaited<ReturnType<typeof loadKnowledge>>;
   try {
-    corpus = JSON.parse(
-      await readFile(join(process.cwd(), "data", "knowledge.json"), "utf8"),
-    );
+    knowledge = await loadKnowledge();
   } catch {
     return Response.json({ status: "knowledge-unavailable" }, { status: 503 });
   }
-  const relevant = searchSources(
+  const query =
     mode === "conversation"
       ? "rozmowa oceniająca potrzeby rozwoju zadania " + question
-      : question,
+      : question;
+  const semantic = await searchEmbedding(query, knowledge.digest);
+  const relevant = searchSources(
+    query,
     scope,
-    [...corpus, ...faqSources(corpus)],
+    [...knowledge.sources, ...faqSources(knowledge.sources)],
+    semantic,
   );
   const examples: Source[] =
     mode === "conversation"

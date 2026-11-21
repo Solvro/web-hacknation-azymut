@@ -24,6 +24,8 @@ W `.env.local` ustaw `DATABASE_URL`, `BETTER_AUTH_URL` zgodny z adresem aplikacj
 
 Uruchom `pnpm knowledge:import` z zainstalowanym uv i dokumentami z katalogu `materials/`. W `.env.local` ustaw `AZYMUT_MODEL_URL` (np. `http://127.0.0.1:11434/v1`) i `AZYMUT_MODEL_NAME` (np. `qwen3:8b`). Prototyp zakłada prywatny serwer Ollama lub vLLM z otwartym modelem. Bez działającego modelu aplikacja zgłasza awarię i pokazuje pasujące źródła.
 
+Do wyszukiwania wektorowego ustaw `AZYMUT_EMBED_URL` i `AZYMUT_EMBED_NAME=bge-m3` oraz użyj PostgreSQL z rozszerzeniem pgvector. Po imporcie uruchom `pnpm knowledge:index`. Wyszukiwanie łączy dopasowanie tekstowe z podobieństwem wektorowym. Bez indeksu lub dostępnego endpointu embeddingów działa wyszukiwanie tekstowe.
+
 ## Gdzie użyto AI
 
 Claude Code i Codex pomagały opracować koncepcję. Codex pomagał przy implementacji i testach. Model generuje objaśnienia proceduralne i propozycje pytań do rozmowy na podstawie źródeł. Punktacja i terminy są obliczane deterministycznie. Opisy zachowań pochodzą z materiałów MC.
