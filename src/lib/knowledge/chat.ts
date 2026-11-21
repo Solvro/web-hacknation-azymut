@@ -1,3 +1,5 @@
+import type { Source } from "./search";
+
 export type Scope = "first" | "periodic";
 export type Mode = "formal" | "conversation";
 export type Evidence = { label: string; text: string };
@@ -5,6 +7,7 @@ export type Citation = {
   id: string;
   title: string;
   locator: string;
+  kind: Source["kind"];
   text: string;
   url: string;
 };

@@ -43,6 +43,7 @@ export function verifyCitations(raw: unknown, context: Source[]) {
       id: source.id,
       title: source.title,
       locator: source.locator,
+      kind: source.kind,
       text: citation.quote,
       url: source.url,
     });

@@ -1,14 +1,22 @@
 "use client";
 
 import "./assistant-chat.css";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowLeft,
   BookOpen,
+  ChevronDown,
   ChevronRight,
+  CalendarDays,
+  ClipboardCheck,
+  ExternalLink,
+  FileText,
   MessageCircle,
   RotateCcw,
+  Scale,
+  Send,
   Sparkles,
   Square,
   X,
@@ -81,6 +89,15 @@ const modes: Record<Mode, string> = {
   conversation: "Przygotowanie rozmowy",
 };
 
+const scopeParams = {
+  periodic: "okresowa",
+  first: "pierwsza",
+} satisfies Record<Scope, string>;
+const modeParams = {
+  formal: "zasady",
+  conversation: "rozmowa",
+} satisfies Record<Mode, string>;
+
 const prompts = {
   periodic: [
     "Ile kryteriów dodatkowych mogę wybrać?",
@@ -110,9 +127,24 @@ export function AssistantChat({
   active?: boolean;
   close?: () => void;
 }) {
-  const [selectedScope, setScope] = useState<Scope>();
-  const scope = fixedScope ?? selectedScope;
-  const [mode, setMode] = useState<Mode>();
+  const params = useSearchParams();
+  const scopeParam = params.get("ocena");
+  const modeKey = fixedScope ? "temat-asystenta" : "temat";
+  const modeParam = params.get(modeKey);
+  const scope =
+    fixedScope ??
+    (scopeParam === scopeParams.periodic
+      ? "periodic"
+      : scopeParam === scopeParams.first
+        ? "first"
+        : undefined);
+  const mode =
+    scope &&
+    (modeParam === modeParams.formal
+      ? "formal"
+      : modeParam === modeParams.conversation
+        ? "conversation"
+        : undefined);
   const [drafts, setDrafts] = useState<
     Partial<Record<`${Scope}-${Mode}`, string>>
   >({});
@@ -139,22 +171,42 @@ export function AssistantChat({
 
   useEffect(() => () => request.current?.abort(), []);
 
-  function scrollToLatest() {
-    if (viewport.current)
-      viewport.current.scrollTop = viewport.current.scrollHeight;
+  useEffect(() => {
+    if (!active) return;
     followLatest.current = true;
     setAtBottom(true);
+    if (draftKey) input.current?.focus({ preventScroll: true });
+    else heading.current?.focus({ preventScroll: true });
+  }, [active, draftKey, scope]);
+
+  // Automatic tracking stays instant so streamed chunks never restart a scroll animation.
+  useEffect(() => {
+    if (!active || !followLatest.current || !viewport.current) return;
+    viewport.current.scrollTop = viewport.current.scrollHeight;
+  }, [active, thread, draftKey, pending]);
+
+  function scrollToLatest() {
+    const history = viewport.current;
+    if (!history) return;
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    history.scrollTo({
+      top: history.scrollHeight,
+      behavior: reducedMotion ? "instant" : "smooth",
+    });
+    input.current?.focus({ preventScroll: true });
   }
 
-  useEffect(() => {
-    if (active && followLatest.current) scrollToLatest();
-  }, [active, thread, scope, mode, pending]);
-
-  function selectTopic(selection: () => void) {
-    followLatest.current = true;
-    setAtBottom(true);
-    selection();
-    requestAnimationFrame(() => heading.current?.focus());
+  function selectTopic(nextScope?: Scope, nextMode?: Mode) {
+    const url = new URL(window.location.href);
+    if (!fixedScope) {
+      if (nextScope) url.searchParams.set("ocena", scopeParams[nextScope]);
+      else url.searchParams.delete("ocena");
+    }
+    if (nextMode) url.searchParams.set(modeKey, modeParams[nextMode]);
+    else url.searchParams.delete(modeKey);
+    window.history.pushState(null, "", url);
   }
 
   function updateTurn(id: number, changes: Partial<Turn>) {
@@ -311,23 +363,13 @@ export function AssistantChat({
     <div className="assistant-chat">
       <header className="chat-header">
         <div className="chat-header-inner">
-          <div>
-            <Heading ref={heading} tabIndex={-1}>
-              {mode ? modes[mode] : scope ? "W czym Ci pomóc?" : "Asystent"}
-            </Heading>
-            <p>
-              {scope
-                ? scopes[scope]
-                : "Wybierz ocenę, której dotyczy Twoje pytanie."}
-            </p>
-          </div>
           <div className="chat-header-actions">
             {mode && (
               <button
                 type="button"
                 className="chat-back"
                 disabled={!!pending}
-                onClick={() => selectTopic(() => setMode(undefined))}
+                onClick={() => selectTopic(scope)}
               >
                 <ArrowLeft aria-hidden="true" size={16} /> Zmień temat
               </button>
@@ -336,7 +378,7 @@ export function AssistantChat({
               <button
                 type="button"
                 className="chat-back"
-                onClick={() => selectTopic(() => setScope(undefined))}
+                onClick={() => selectTopic()}
               >
                 <ArrowLeft aria-hidden="true" size={16} /> Zmień rodzaj oceny
               </button>
@@ -352,32 +394,46 @@ export function AssistantChat({
               </button>
             )}
           </div>
+          <div>
+            <Heading ref={heading} tabIndex={-1}>
+              {mode ? modes[mode] : scope ? "W czym Ci pomóc?" : "Asystent"}
+            </Heading>
+            <p>
+              {scope
+                ? scopes[scope]
+                : "Wybierz ocenę, której dotyczy Twoje pytanie."}
+            </p>
+          </div>
         </div>
       </header>
       {!scope ? (
         <div className="chat-choices">
           <Choice
+            icon={CalendarDays}
             title={scopes.periodic}
             description="Ocena pracownika przeprowadzana w trakcie zatrudnienia."
-            onClick={() => selectTopic(() => setScope("periodic"))}
+            onClick={() => selectTopic("periodic")}
           />
           <Choice
+            icon={ClipboardCheck}
             title={scopes.first}
             description="Ocena osoby rozpoczynającej pracę w służbie cywilnej."
-            onClick={() => selectTopic(() => setScope("first"))}
+            onClick={() => selectTopic("first")}
           />
         </div>
       ) : !draftKey ? (
         <div className="chat-choices">
           <Choice
+            icon={Scale}
             title="Zapytaj o zasady oceny"
             description="Sprawdź terminy, wymagania i sposób przeprowadzenia oceny."
-            onClick={() => selectTopic(() => setMode("formal"))}
+            onClick={() => selectTopic(scope, "formal")}
           />
           <Choice
+            icon={MessageCircle}
             title="Przygotuj rozmowę"
             description="Ułóż plan i pytania na spotkanie z pracownikiem."
-            onClick={() => selectTopic(() => setMode("conversation"))}
+            onClick={() => selectTopic(scope, "conversation")}
           />
         </div>
       ) : (
@@ -405,7 +461,8 @@ export function AssistantChat({
                     {suggestions.map((text) => (
                       <li key={text}>
                         <button type="button" onClick={() => send(text, false)}>
-                          {text}
+                          <MessageCircle aria-hidden="true" size={17} />
+                          <span>{text}</span>
                           <ChevronRight aria-hidden="true" size={16} />
                         </button>
                       </li>
@@ -557,7 +614,7 @@ export function AssistantChat({
                   title="Wyślij wiadomość"
                   disabled={question.trim().length < 5}
                 >
-                  Wyślij
+                  <Send aria-hidden="true" size={17} /> Wyślij
                 </button>
               )}
             </div>
@@ -573,19 +630,26 @@ export function AssistantChat({
 }
 
 function Choice({
+  icon: Icon,
   title,
   description,
   onClick,
 }: {
+  icon: typeof CalendarDays;
   title: string;
   description: string;
   onClick: () => void;
 }) {
   return (
     <button type="button" className="tile chat-choice" onClick={onClick}>
+      <Icon className="chat-choice-icon" aria-hidden="true" size={21} />
       <strong>{title}</strong>
       <span>{description}</span>
-      <ChevronRight aria-hidden="true" size={20} />
+      <ChevronRight
+        className="chat-choice-arrow"
+        aria-hidden="true"
+        size={20}
+      />
     </button>
   );
 }
@@ -600,20 +664,34 @@ function Sources({
   return (
     <details className="chat-sources">
       <summary>
-        <BookOpen aria-hidden="true" size={15} />{" "}
-        {fallback ? "Znalezione fragmenty" : "Źródła odpowiedzi"}{" "}
+        <BookOpen aria-hidden="true" size={16} />
+        {fallback ? "Znalezione fragmenty" : "Źródła odpowiedzi"}
         <span>{sources.length}</span>
+        <ChevronDown
+          className="chat-sources-chevron"
+          aria-hidden="true"
+          size={16}
+        />
       </summary>
       <ul>
         {sources.map((source, index) => (
-          <li key={source.id + "-" + index}>
-            <strong>
-              {source.title} · {source.locator}
-            </strong>
+          <li className="chat-source-card" key={source.id + "-" + index}>
+            <div className="chat-source-header">
+              {source.kind === "law" ? (
+                <Scale aria-hidden="true" size={19} />
+              ) : (
+                <FileText aria-hidden="true" size={19} />
+              )}
+              <div>
+                <strong>{source.title}</strong>
+                <span>{source.locator}</span>
+              </div>
+            </div>
             <blockquote>{source.text}</blockquote>
             {source.url && (
               <a href={source.url} target="_blank" rel="noreferrer">
-                Otwórz źródło
+                {source.kind === "law" ? "Otwórz akt prawny" : "Otwórz źródło"}
+                <ExternalLink aria-hidden="true" size={14} />
               </a>
             )}
           </li>
@@ -632,13 +710,7 @@ export function AssistantPanel({
 }) {
   const [open, setOpen] = useState(false);
   const launcher = useRef<HTMLButtonElement>(null);
-  const drawer = useRef<HTMLDivElement>(null);
   const id = useId();
-
-  useEffect(() => {
-    if (open)
-      drawer.current?.querySelector<HTMLElement>(".chat-header h2")?.focus();
-  }, [open]);
 
   function close() {
     setOpen(false);
@@ -658,7 +730,6 @@ export function AssistantPanel({
         <MessageCircle aria-hidden="true" /> Zapytaj asystenta
       </button>
       <div
-        ref={drawer}
         className="chat-drawer"
         id={id}
         hidden={!open}
