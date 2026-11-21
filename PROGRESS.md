@@ -1,5 +1,7 @@
 # Postęp Azymutu
 
+- 21 listopada — dodano kolejkę kadr z terminem następnej czynności, automatyczne przypomnienie w oknie siedmiu dni i zamykanie obu ścieżek po odnotowaniu zapoznania. W Chrome z prawdziwym PostgreSQL sprawdzono obie role, izolację sesji i treści notatek, odbiór automatycznego i ręcznego przypomnienia oraz brak ponowienia po odczycie i zamknięciu. Sześć przebiegów równoległych dało jeden wpis. Próba SQL sprawdziła granicę siedmiu dni, zmianę terminu, wcześniejsze ręczne przypomnienie i zamknięty proces. Przeszło 35 testów.
+
 - 21 listopada — dodano analizę wklejonego OSP, cytaty przy propozycjach arkusza i kryteriów oraz przypinanie wskaźników na etap obserwacji. Chrome potwierdził jawny wybór arkusza, przypięcie wskaźników, trwałość zakresu i ręczny wybór przy niejednoznacznym opisie. Gemma 4 12B zwróciła właściwe propozycje dla B i C oraz wstrzymała się dla samej koordynacji. Jawny opis kierownika urzędu wskazał A; serwer odrzucił pojedynczą propozycję bez cytatu z OSP. Przeszło 32 testy i kontrola typów.
 
 - 21 listopada — dodano dziennik z opcjonalnymi datami oraz agendę z oczekiwaniami, pytaniami, pokryciem wskaźników i rozkładem po miesiącach. W Chrome sprawdzono wznowienie agendy, przejście do wskaźnika, aktualizację po edycji daty i przejście do PDF po jawnej decyzji 9 pkt (średnia 6,2). Pobierany PDF zawiera wniosek rozwojowy, a surowa notatka pozostaje w szkicu. Przeszło 29 testów i kontrola typów.

@@ -4,6 +4,7 @@ import { listAudit, listCases } from "../../lib/server/cases";
 import { Logo } from "../logo";
 import { Logout } from "../logout";
 import { Remind } from "./remind";
+import { caseTask } from "../../lib/cases/next-action";
 
 export const dynamic = "force-dynamic";
 const dateTime = new Intl.DateTimeFormat("pl-PL", {
@@ -11,8 +12,14 @@ const dateTime = new Intl.DateTimeFormat("pl-PL", {
   timeStyle: "short",
   timeZone: "Europe/Warsaw",
 });
-const isComplete = (status: string) =>
-  status === "Do podpisu" || status === "Zapoznano z oceną";
+const urgency = {
+  overdue: { label: "Po terminie", order: 0 },
+  soon: { label: "Do 7 dni", order: 1 },
+  confirmation: { label: "Oczekuje na potwierdzenie", order: 2 },
+  undated: { label: "Termin do ustalenia", order: 3 },
+  scheduled: { label: "Zaplanowano", order: 4 },
+};
+const dateLabel = (iso: string) => iso.split("-").reverse().join(".");
 const names = { periodic: "Ocena okresowa", first: "Pierwsza ocena" };
 
 export default async function HRPage() {
@@ -22,12 +29,11 @@ export default async function HRPage() {
     listCases(session.workspace),
     session.role === "admin" ? listAudit(session.workspace) : [],
   ]);
-  const today = new Intl.DateTimeFormat("fr-CA", {
-    timeZone: "Europe/Warsaw",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
+  const queue = cases.flatMap((item) => {
+    const task = caseTask(item.kind, item.status, item.actionDue);
+    return task ? [{ item, task }] : [];
+  }).sort((a, b) => urgency[a.task.urgency].order - urgency[b.task.urgency].order);
+  const completed = cases.filter(({ status }) => status === "Zapoznano z oceną");
   return (
     <>
       <header className="top">
@@ -40,41 +46,35 @@ export default async function HRPage() {
       </header>
       <main className="hr-workspace">
         <h1>{session.role === "admin" ? "Administrator" : "Kadry"}</h1>
-        <p className="lead">
-          Monitoruj status i termin zapisanych spraw demonstracyjnych.
-        </p>
+        <p className="lead">Sprawdź, co przełożony powinien zrobić w każdej zapisanej sprawie.</p>
         <section>
-          <h2>Sprawy w tej sesji demonstracyjnej</h2>
-          {cases.length === 0 ? (
-            <p>Sprawy pojawią się po zapisaniu ich przez przełożonego.</p>
+          <h2>Sprawy wymagające działania</h2>
+          {queue.length === 0 ? (
+            <p>{cases.length === 0
+              ? "Sprawy pojawią się po zapisaniu ich przez przełożonego."
+              : "Wszystkie zapisane sprawy mają odnotowane zapoznanie z oceną."}</p>
           ) : (
-            <table>
+            <table className="hr-queue">
               <thead>
                 <tr>
                   <th scope="col">Sprawa</th>
-                  <th scope="col">Etap</th>
-                  <th scope="col">Termin</th>
+                  <th scope="col">Następna czynność</th>
+                  <th scope="col">Termin czynności</th>
                   <th scope="col">Przypomnienie</th>
                 </tr>
               </thead>
               <tbody>
-                {cases.map((item) => (
+                {queue.map(({ item, task }) => (
                   <tr key={item.kind}>
-                    <td>{item.title}</td>
-                    <td>{item.status}</td>
+                    <td><strong>{item.title}</strong><small>{item.status}</small></td>
+                    <td>{task.label}<small>Przełożony</small></td>
                     <td>
-                      {item.due?.split("-").reverse().join(".") ||
-                        "Do ustalenia"}
-                      {item.due &&
-                        item.due < today &&
-                        !isComplete(item.status) && <small>Po terminie</small>}
+                      {item.actionDue && <time dateTime={item.actionDue}>{dateLabel(item.actionDue)}</time>}
+                      <small data-urgency={task.urgency}>{urgency[task.urgency].label}</small>
                     </td>
                     <td>
-                      {isComplete(item.status) ? (
-                        "—"
-                      ) : (
-                        <Remind kind={item.kind} unread={item.unread} />
-                      )}
+                      <Remind kind={item.kind} unread={!!item.reminder} />
+                      {item.reminder === "automatic" && <small>Wysłano automatycznie</small>}
                     </td>
                   </tr>
                 ))}
@@ -82,6 +82,14 @@ export default async function HRPage() {
             </table>
           )}
         </section>
+        {completed.length > 0 && (
+          <section>
+            <h2>Zakończone sprawy</h2>
+            <ul>
+              {completed.map((item) => <li key={item.kind}>{item.title} · {item.status}</li>)}
+            </ul>
+          </section>
+        )}
         {session.role === "admin" && (
           <section>
             <h2>Dziennik czynności</h2>

@@ -13,7 +13,7 @@ if (!connectionString || !passphrase || passphrase.length < 12) {
 const db = new pg.Client({ connectionString });
 await db.connect();
 try {
-  for (const migration of ["001-demo.sql", "003-department-head.sql"]) {
+  for (const migration of ["001-demo.sql", "003-department-head.sql", "004-automatic-reminders.sql"]) {
     await db.query(
       await readFile(new URL("../db/" + migration, import.meta.url), "utf8"),
     );

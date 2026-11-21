@@ -23,7 +23,7 @@ export default async function Page({
       workspace={session?.workspace}
       remoteDraft={saved?.draft}
       remoteRevision={saved?.revision ?? 0}
-      unread={cases.some((item) => item.kind === "periodic" && item.unread)}
+      reminder={cases.find((item) => item.kind === "periodic")?.reminder ?? null}
       sample={przyklad === "1"}
     />
   );

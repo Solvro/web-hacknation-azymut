@@ -1,24 +1,26 @@
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
+import type { CaseKind, ReminderKind } from "../cases/next-action";
 import { getDatabase } from "./db";
 
-export type CaseKind = "periodic" | "first";
+export type { CaseKind } from "../cases/next-action";
 export type CaseSummary = {
   kind: CaseKind;
   title: string;
   status: string;
-  due: string | null;
-  revision: number;
-  unread: boolean;
+  actionDue: string | null;
+  reminder: ReminderKind | null;
 };
 type Actor = { id: string; workspace: string };
 
 export async function listCases(workspace: string): Promise<CaseSummary[]> {
   const { rows } = await getDatabase().execute<CaseSummary>(sql`
-    SELECT a.kind, a.title, a.status, a.due::text, a.revision,
-      EXISTS(SELECT 1 FROM reminder r WHERE r.workspace=a.workspace AND r.kind=a.kind AND r.read_at IS NULL) AS unread
-    FROM assessment a WHERE a.workspace=${workspace}
-    ORDER BY a.due NULLS LAST, a.kind
+    SELECT a.kind, a.title, a.status, a.action_due::text AS "actionDue",
+      CASE WHEN r.id IS NULL THEN NULL WHEN r.automatic THEN 'automatic' ELSE 'manual' END AS reminder
+    FROM assessment a
+    LEFT JOIN reminder r ON r.workspace=a.workspace AND r.kind=a.kind AND r.read_at IS NULL
+    WHERE a.workspace=${workspace}
+    ORDER BY a.action_due NULLS LAST, a.kind
   `);
   return rows;
 }
@@ -39,6 +41,7 @@ export async function saveCase(
     title: string;
     status: string;
     due: string | null;
+    actionDue: string | null;
     revision: number;
   },
 ) {
@@ -46,12 +49,13 @@ export async function saveCase(
     const { rows } = await db.execute<{ revision: number }>(
       data.revision === 0
         ? sql`
-      INSERT INTO assessment (workspace,kind,title,status,due,draft)
-      VALUES(${actor.workspace},${kind},${data.title},${data.status},${data.due},${JSON.stringify(data.draft)}::jsonb)
+      INSERT INTO assessment (workspace,kind,title,status,due,action_due,draft)
+      VALUES(${actor.workspace},${kind},${data.title},${data.status},${data.due},${data.actionDue},${JSON.stringify(data.draft)}::jsonb)
       ON CONFLICT DO NOTHING RETURNING revision
     `
         : sql`
-      UPDATE assessment SET title=${data.title},status=${data.status},due=${data.due},draft=${JSON.stringify(data.draft)}::jsonb,
+      UPDATE assessment SET title=${data.title},status=${data.status},due=${data.due},
+      action_due=${data.actionDue},draft=${JSON.stringify(data.draft)}::jsonb,
         revision=revision+1,updated_at=now()
       WHERE workspace=${actor.workspace} AND kind=${kind} AND revision=${data.revision}
       RETURNING revision
@@ -61,15 +65,26 @@ export async function saveCase(
     await db.execute(
       sql`INSERT INTO audit_event(id,workspace,actor,action,kind) VALUES(${randomUUID()},${actor.workspace},${actor.id},'case_saved',${kind})`,
     );
-    return rows[0].revision;
+    await db.execute(sql`
+      UPDATE reminder SET read_at=now()
+      WHERE workspace=${actor.workspace} AND kind=${kind} AND read_at IS NULL
+        AND (${data.status} = 'Zapoznano z oceną' OR deadline IS DISTINCT FROM ${data.actionDue}::date)
+    `);
+    await db.execute(sql`SELECT queue_due_reminders(${actor.workspace}, ${kind})`);
+    const { rows: [pending] } = await db.execute<{ reminder: ReminderKind }>(sql`
+      SELECT CASE WHEN automatic THEN 'automatic' ELSE 'manual' END AS reminder
+      FROM reminder WHERE workspace=${actor.workspace} AND kind=${kind} AND read_at IS NULL
+    `);
+    return { revision: rows[0].revision, reminder: pending?.reminder ?? null };
   });
 }
 export async function sendReminder(actor: Actor, kind: CaseKind) {
   return getDatabase().transaction(async (db) => {
     const result = await db.execute(sql`
-      INSERT INTO reminder(id,workspace,kind)
-      SELECT ${randomUUID()},workspace,kind FROM assessment
-      WHERE workspace=${actor.workspace} AND kind=${kind} AND status NOT IN ('Do podpisu', 'Zapoznano z oceną')
+      INSERT INTO reminder(id,workspace,kind,deadline)
+      SELECT ${randomUUID()},workspace,kind,action_due FROM assessment
+      WHERE workspace=${actor.workspace} AND kind=${kind} AND status <> 'Zapoznano z oceną'
+      FOR UPDATE
       ON CONFLICT DO NOTHING RETURNING id
     `);
     if (!result.rows.length) return false;

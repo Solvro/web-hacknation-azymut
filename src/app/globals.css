@@ -794,3 +794,11 @@ details.disclosure > p {
 .position-planner + .role-grid {
   margin-top: 1rem;
 }
+.hr-queue [data-urgency="overdue"] {
+  color: #a12d49;
+  font-weight: 650;
+}
+.hr-queue [data-urgency="soon"] {
+  color: #78560a;
+  font-weight: 650;
+}

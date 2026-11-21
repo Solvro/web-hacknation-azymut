@@ -16,4 +16,8 @@ if [ -n "${DATABASE_URL:-}" ] && [ -n "${AZYMUT_EMBED_URL:-}" ] && [ -n "${AZYMU
   node scripts/index-knowledge.mjs || echo "Indeksowanie wektorowe nie powiodło się; asystent użyje wyszukiwania tekstowego." >&2
 fi
 
+if [ -n "${DATABASE_URL:-}" ]; then
+  node scripts/remind-due.mjs --watch &
+fi
+
 exec "$@"

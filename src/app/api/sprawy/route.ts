@@ -4,21 +4,13 @@ import { saveCase } from "../../../lib/server/cases";
 import { loadCompetencyModel } from "../../../lib/server/model";
 import { readPeriodicDraft } from "../../../lib/drafts/periodic";
 import { validateFirstDraft } from "../../../lib/drafts/first";
-import { firstAssessmentWindow } from "../../../lib/scoring/calendar";
+import { firstCaseState, periodicCaseState } from "../../../lib/cases/next-action";
 
 const input = z.object({
   kind: z.enum(["periodic", "first"]),
   revision: z.int().min(0),
   draft: z.record(z.string(), z.unknown()),
 });
-const statuses = [
-  "Przygotowanie",
-  "Rozmowa wstępna",
-  "Obserwacje",
-  "Rozmowa oceniająca",
-  "Do podpisu",
-];
-
 export async function POST(request: Request) {
   const actor = await requireApiRole(request, ["supervisor"]);
   if (actor instanceof Response) return actor;
@@ -31,6 +23,7 @@ export async function POST(request: Request) {
     title: string;
     status: string;
     due: string | null;
+    actionDue: string | null;
     draft: unknown;
   };
   try {
@@ -40,24 +33,14 @@ export async function POST(request: Request) {
       const draft = readPeriodicDraft(JSON.stringify(payload.draft), model);
       record = {
         title: `Ocena okresowa · arkusz ${draft.form}`,
-        due: draft.meeting.assessmentDue || null,
-        status:
-          draft.step === 4 && draft.acknowledged
-            ? "Zapoznano z oceną"
-            : statuses[draft.step],
+        ...periodicCaseState(draft),
         draft,
       };
     } else {
       const draft = validateFirstDraft(payload.draft, model);
-      const due =
-        draft.start && draft.end
-          ? firstAssessmentWindow(draft.start, draft.end).latestAssessment
-          : null;
       record = {
         title: "Pierwsza ocena",
-        due,
-        status:
-          draft.step === 1 ? "Sprawozdanie i egzamin" : statuses[draft.step],
+        ...firstCaseState(draft),
         draft,
       };
     }
@@ -67,11 +50,11 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  const revision = await saveCase(actor, payload.kind, {
+  const saved = await saveCase(actor, payload.kind, {
     ...record,
     revision: payload.revision,
   });
-  if (revision === null)
+  if (saved === null)
     return Response.json(
       {
         error:
@@ -79,5 +62,5 @@ export async function POST(request: Request) {
       },
       { status: 409 },
     );
-  return Response.json({ revision });
+  return Response.json(saved);
 }

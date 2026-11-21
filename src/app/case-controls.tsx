@@ -1,31 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import type { CaseKind } from "../lib/server/cases";
+import type { CaseKind, ReminderKind } from "../lib/cases/next-action";
 
 export function CaseControls({
   kind,
   revision,
   setRevision,
-  unread,
+  reminder,
   draft,
 }: {
   kind: CaseKind;
   revision: number;
   setRevision: (revision: number) => void;
-  unread: boolean;
+  reminder: ReminderKind | null;
   draft: Record<string, unknown>;
 }) {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
-  const [hasReminder, setHasReminder] = useState(unread);
+  const [pending, setPending] = useState(reminder);
   return (
     <div className="case-box">
-      {hasReminder && (
+      {pending && (
         <div className="reminder" role="status">
           <p>
-            Kadry proszą o sprawdzenie terminu i uzupełnienie bieżącego etapu
-            tej oceny.
+            {pending === "automatic"
+              ? "Zbliża się termin bieżącej czynności. Sprawdź, co zostało do zrobienia w tej sprawie."
+              : "Kadry proszą o uzupełnienie bieżącego etapu tej oceny."}
           </p>
           <button
             onClick={async () => {
@@ -35,7 +36,7 @@ export function CaseControls({
                   body: JSON.stringify({ kind, action: "read" }),
                 });
                 if (!response.ok) throw new Error();
-                setHasReminder(false);
+                setPending(null);
               } catch {
                 setMessage("Nie udało się oznaczyć przypomnienia.");
               }
@@ -59,6 +60,7 @@ export function CaseControls({
             if (!response.ok)
               throw new Error(result.error || "Zapis nie powiódł się.");
             setRevision(result.revision);
+            setPending(result.reminder);
             setMessage("Zapisano sprawę na serwerze.");
           } catch (error) {
             setMessage(

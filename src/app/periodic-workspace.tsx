@@ -2,6 +2,7 @@
 
 import { FollowUpDeadlines } from "./periodic-deadlines";
 import { CaseControls } from "./case-controls";
+import type { ReminderKind } from "../lib/cases/next-action";
 import { AppHeader } from "./app-header";
 
 import { AssistantPanel } from "./assistant-panel";
@@ -84,14 +85,14 @@ export function PeriodicWorkspace({
   workspace,
   remoteDraft,
   remoteRevision,
-  unread,
+  reminder,
   sample,
 }: {
   model: CompetencyModel;
   workspace?: string;
   remoteDraft?: unknown;
   remoteRevision: number;
-  unread: boolean;
+  reminder: ReminderKind | null;
   sample?: boolean;
 }) {
   const [initial, setInitial] = useState<PeriodicDraft | null | undefined>(
@@ -148,7 +149,7 @@ export function PeriodicWorkspace({
       initial={initial}
       notice={notice}
       workspace={workspace}
-      unread={unread}
+      reminder={reminder}
       storageKey={storageKey}
       revision={revision}
       setRevision={setRevision}
@@ -180,7 +181,7 @@ function AssessmentEditor({
   initial,
   notice,
   workspace,
-  unread,
+  reminder,
   storageKey,
   revision,
   setRevision,
@@ -191,7 +192,7 @@ function AssessmentEditor({
   initial: PeriodicDraft | null;
   notice: string;
   workspace?: string;
-  unread: boolean;
+  reminder: ReminderKind | null;
   storageKey: string;
   revision: number;
   setRevision: (value: number) => void;
@@ -369,7 +370,7 @@ function AssessmentEditor({
               kind="periodic"
               revision={revision}
               setRevision={setRevision}
-              unread={unread}
+              reminder={reminder}
               draft={draft}
             />
           )}

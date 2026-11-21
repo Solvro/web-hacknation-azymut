@@ -1,6 +1,7 @@
 "use client";
 
 import { CaseControls } from "../case-controls";
+import type { ReminderKind } from "../../lib/cases/next-action";
 import { firstReportStatus, type FirstDraft } from "../../lib/drafts/first";
 import { AppHeader } from "../app-header";
 
@@ -52,14 +53,14 @@ export function FirstWorkspace({
   authenticated,
   initial,
   remoteRevision,
-  unread,
+  reminder,
   notice,
 }: {
   model: CompetencyModel;
   authenticated: boolean;
   initial?: FirstDraft;
   remoteRevision: number;
-  unread: boolean;
+  reminder: ReminderKind | null;
   notice?: string;
 }) {
   const [step, setStep] = useState(initial?.step ?? 0);
@@ -82,6 +83,7 @@ export function FirstWorkspace({
     initial?.examples ?? {},
   );
   const [conversation, setConversation] = useState(initial?.conversation ?? "");
+  const [acknowledged, setAcknowledged] = useState(initial?.acknowledged ?? "");
   const [decisions, setDecisions] = useState<FirstAssessment["decisions"]>(
     initial?.decisions ?? {},
   );
@@ -118,6 +120,7 @@ export function FirstWorkspace({
     decisions,
     justification,
     development,
+    acknowledged,
   };
   const result = firstResult({ decisions, exam, report });
   const criterion = firstCriteria[active];
@@ -130,6 +133,7 @@ export function FirstWorkspace({
   const suggestion = suggest(criterion);
   const conversationMin = received || reportDue;
   function go(next: number) {
+    if (next !== 4) setAcknowledged("");
     setStep(next);
     window.scrollTo(0, 0);
   }
@@ -159,7 +163,7 @@ export function FirstWorkspace({
               kind="first"
               revision={revision}
               setRevision={setRevision}
-              unread={unread}
+              reminder={reminder}
               draft={draft}
             />
           )}
@@ -588,8 +592,9 @@ export function FirstWorkspace({
               <section>
                 <h2>Ocena {result.positive ? "pozytywna" : "negatywna"}</h2>
                 <p>
-                  Średnia {result.average.toLocaleString("pl-PL")} pkt · Do
-                  podpisu przełożonego i kierującego komórką
+                  Średnia {result.average.toLocaleString("pl-PL")} pkt · {acknowledged
+                    ? "Zapoznano z oceną"
+                    : "Do podpisu przełożonego i kierującego komórką"}
                 </p>
                 {result.reasons.map((reason) => (
                   <p key={reason}>{reasons[reason]}</p>
@@ -627,6 +632,20 @@ export function FirstWorkspace({
                   development,
                 }}
               />
+              <section>
+                <h2>Zapoznanie z oceną</h2>
+                <label className="field">
+                  Data zapoznania pracownika z podpisaną oceną
+                  <input
+                    type="date"
+                    min={conversation}
+                    value={acknowledged}
+                    onChange={(event) => {
+                      if (event.target.validity.valid) setAcknowledged(event.target.value);
+                    }}
+                  />
+                </label>
+              </section>
               <div className="actions">
                 <button onClick={() => go(3)}>Wróć do decyzji</button>
               </div>

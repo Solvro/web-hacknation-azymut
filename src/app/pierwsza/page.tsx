@@ -30,7 +30,7 @@ export default async function FirstPage() {
       initial={initial}
       remoteRevision={saved?.revision ?? 0}
       notice={notice}
-      unread={cases.some((item) => item.kind === "first" && item.unread)}
+      reminder={cases.find((item) => item.kind === "first")?.reminder ?? null}
     />
   );
 }

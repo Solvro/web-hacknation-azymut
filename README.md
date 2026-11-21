@@ -1,6 +1,8 @@
 # Azymut
 
-Prototyp wspiera przełożonego w służbie cywilnej. W przeglądarce można przejść przez dobór kryteriów arkusza B lub C, rozmowę rozpoczynającą z ustaleniem terminów, wybór obserwowanych zachowań, rozmowę oceniającą, decyzje przełożonego i wnioski do indywidualnego programu rozwoju zawodowego. Pierwsza ocena ma własną ścieżkę, dostępną z nagłówka. Po skonfigurowaniu bazy można zapisać sprawę obu ścieżek na serwerze.
+Azymut pomaga przełożonemu przygotować ocenę w służbie cywilnej. W ocenie okresowej proponuje arkusz B/C i zakres obserwacji na podstawie opisu stanowiska. Z notatek wskazuje pasujące wskaźniki modelu MC, a z potwierdzonych przykładów i otwartych pytań układa agendę rozmowy. Przełożony wybiera zaobserwowane zachowania i po rozmowie decyduje o ocenach trafiających do PDF. Pierwsza ocena ma własną ścieżkę. Kadry widzą kolejne czynności, terminy i stan przypomnienia.
+
+W demo otwórz **przykładową ocenę okresową**. Wybierz **Wstaw przykładowe notatki** i **Przeanalizuj notatki**. Porównaj cytat z oryginałem, potwierdź przypisanie jednej notatki i zapisz ogólną uwagę jako kwestię do rozmowy. Następnie otwórz agendę, wybierz ocenę po rozmowie i pobierz arkusz B.
 
 ## Uruchomienie
 
@@ -14,11 +16,13 @@ Otwórz [localhost:3000](http://localhost:3000). Start i budowanie aplikacji imp
 
 ## Zakres tej wersji
 
-Stanowiska i ich obowiązki są syntetyczne. Szkic okresowej zapisuje się automatycznie w pamięci sesji karty. Po odświeżeniu wracają wybrany wskaźnik, obserwacje, decyzje i ustalenia rozmowy. Przycisk „Rozpocznij nową ocenę” pozwala usunąć bieżący szkic. Z podsumowania można pobrać arkusz B, C lub pierwszej oceny w PDF z danymi demonstracyjnymi i miejscami na podpis. PDF odwzorowuje główne części wzorów. Przełożony może dołączyć umotywowany wniosek o kolejny stopień służbowy do pozytywnej oceny urzędnika. W pierwszej ocenie dostępny jest również formularz sprawozdania. Noto Sans jest dołączony na licencji OFL. W trybie z bazą przełożony zapisuje sprawy, a HR widzi status i termin oraz wysyła przypomnienia. Administrator widzi też dziennik czynności.
+Stanowiska i ich obowiązki są syntetyczne. Szkic okresowej zapisuje się automatycznie w pamięci sesji karty. Po odświeżeniu wracają wybrany wskaźnik, obserwacje, decyzje i ustalenia rozmowy. Przycisk „Rozpocznij nową ocenę” pozwala usunąć bieżący szkic. Z podsumowania można pobrać arkusz B, C lub pierwszej oceny w PDF z danymi demonstracyjnymi i miejscami na podpis. PDF odwzorowuje główne części wzorów. Przełożony może dołączyć umotywowany wniosek o kolejny stopień służbowy do pozytywnej oceny urzędnika. W pierwszej ocenie dostępny jest również formularz sprawozdania. Noto Sans jest dołączony na licencji OFL. W trybie z bazą przełożony zapisuje sprawy, a HR widzi kolejkę czynności, terminy i stan przypomnień. Administrator widzi też dziennik czynności.
 
 ## Konta i panel kadr
 
 W `.env.local` ustaw `DATABASE_URL`, `BETTER_AUTH_URL` zgodny z adresem aplikacji, losowy `BETTER_AUTH_SECRET` (minimum 32 znaki) oraz `AZYMUT_DEMO_PASSWORD` (minimum 12 znaków). Uruchom `pnpm db:setup`. Formularz logowania udostępnia cztery fikcyjne konta z jednym skonfigurowanym hasłem. Przycisk „Zmień konto” pozwala wysłać przypomnienie w roli HR i odebrać je jako przełożony w tej samej przeglądarce. Kierujący komórką może pobrać ukończoną pierwszą ocenę do podpisu. Do monitorowania trafiają sprawy po kliknięciu „Zapisz sprawę”. Bez DATABASE_URL dostępny jest lokalny tryb przełożonego.
+
+Przypomnienie o czynności z terminem w ciągu siedmiu dni trafia do skrzynki przełożonego. Zapis sprawy od razu sprawdza dany termin. W Dockerze proces sprawdza pozostałe sprawy przy uruchomieniu i co pięć minut. Przy uruchomieniu poza Dockerem można dodać `pnpm reminders:run` do harmonogramu. Sprawdzenie używa daty w strefie Europe/Warsaw, omija zakończone sprawy i wysyła najwyżej jedno automatyczne przypomnienie na termin.
 
 ## Asystent
 
@@ -46,6 +50,8 @@ Compose udostępnia aplikację pod `http://localhost:3000` i uruchamia PostgreSQ
 W konfiguracji z bazą operacje zapisujące wymagają sesji Better Auth, roli oraz zgodnego nagłówka `Origin`. Zapis sprawy sprawdza numer rewizji i zwraca `409`, jeśli od czasu odczytu inną wersję zapisano na serwerze.
 
 - `POST /api/sprawy` zapisuje `{kind, revision, draft}` przełożonego. Rodzaj to `periodic` lub `first` i odpowiada schematowi szkicu w `src/lib/drafts`.
+- `POST /api/opis-stanowiska` przyjmuje `{version, text}` (tekst syntetycznego OSP, 20–6000 znaków). Zwraca propozycję arkusza, kryteriów i wskaźników z dosłownymi cytatami. Przy niejednoznacznym zakresie zwraca `form: null`.
+- `POST /api/obserwacje` przyjmuje `{version, form, extra, notes}` (do ośmiu notatek po maksymalnie 700 znaków). Zwraca wskaźniki lub typ brakującej informacji i cytaty. Przy niedostępnym modelu zwraca `503`. Interfejs oferuje wtedy ręczne przypisanie.
 - `POST /api/przypomnienia` przyjmuje `{kind, action}`. Akcję `send` wykonuje HR lub administrator. Akcję `read` wykonuje przełożony.
 - `POST /api/arkusze` generuje PDF z użyciem schematu w `src/lib/pdf`. Dozwolone formularze to `B`, `C`, `first` i `report`.
 - `GET /api/do-podpisu` zwraca kierującemu komórką PDF ukończonej pierwszej oceny z jego zestawu spraw.
@@ -55,4 +61,4 @@ Przyszła integracja z QNT obejmuje import pracownika, stanowiska oraz przypisan
 
 ## Gdzie użyto AI
 
-Claude Code i Codex pomagały opracować koncepcję. Codex pomagał przy implementacji i testach. Model generuje objaśnienia proceduralne i propozycje pytań do rozmowy na podstawie źródeł. Punktacja i terminy są obliczane deterministycznie. Opisy zachowań pochodzą z materiałów MC.
+Claude Code i Codex pomagały opracować koncepcję. Codex pomagał przy implementacji i testach. Model generuje objaśnienia proceduralne na podstawie źródeł, dopasowuje fragmenty OSP i notatek do modelu MC oraz pomaga przygotować pytania do rozmowy. Punktacja i terminy są obliczane deterministycznie. Opisy zachowań pochodzą z materiałów MC.

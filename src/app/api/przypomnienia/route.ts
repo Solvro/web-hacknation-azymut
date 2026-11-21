@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   if (action === "send" && !(await sendReminder(actor, kind))) {
     return Response.json(
       {
-        error: "Sprawa ma już nieodczytane przypomnienie albo jest zakończona.",
+        error: "Sprawa ma już nieodczytane przypomnienie albo odnotowano zapoznanie z oceną.",
       },
       { status: 409 },
     );

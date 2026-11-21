@@ -45,6 +45,7 @@ const schema = z.object({
   ),
   justification: text,
   development: text,
+  acknowledged: date.optional(),
 });
 
 export type FirstDraft = z.infer<typeof schema>;
@@ -121,6 +122,9 @@ export function validateFirstDraft(
     !draft.replacement
   )
     throw new Error("Podstawa wyjątku wymaga zatrudnienia na zastępstwo.");
+  if (draft.acknowledged && (draft.step !== 4 || draft.acknowledged < draft.conversation)) {
+    throw new Error("Data zapoznania musi przypadać po sporządzeniu oceny.");
+  }
   if (draft.step === 4) {
     const result = firstResult({
       decisions: draft.decisions,

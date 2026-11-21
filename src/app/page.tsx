@@ -15,10 +15,10 @@ export const dynamic = "force-dynamic";
 function CaseStatus({ item }: { item?: CaseSummary }) {
   if (!item) return <span className="status idle">Brak rozpoczętej sprawy</span>;
   return (
-    <span className={"status" + (item.unread ? " alert" : "")}>
-      {item.unread ? "Przypomnienie od kadr · " : ""}
+    <span className={"status" + (item.reminder ? " alert" : "")}>
+      {item.reminder ? "Przypomnienie · " : ""}
       {item.status}
-      {item.due ? " · termin " + item.due.split("-").reverse().join(".") : ""}
+      {item.actionDue ? " · termin " + item.actionDue.split("-").reverse().join(".") : ""}
     </span>
   );
 }
@@ -79,8 +79,8 @@ export default async function Home() {
         <Link className="sample" href="/okresowa?przyklad=1">
           <PlayCircle aria-hidden="true" />
           <span>
-            <strong>Pierwszy raz tutaj?</strong> Otwórz przykładową ocenę z
-            wypełnionymi danymi i zobacz, jak działa sugerowany poziom.
+            <strong>Wypróbuj na przykładowej ocenie.</strong> Przeanalizuj notatki,
+            znajdź wskaźniki i przygotuj agendę rozmowy.
           </span>
           <ArrowRight aria-hidden="true" />
         </Link>
