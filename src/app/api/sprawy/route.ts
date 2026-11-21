@@ -41,7 +41,10 @@ export async function POST(request: Request) {
       record = {
         title: `Ocena okresowa · arkusz ${draft.form}`,
         due: draft.meeting.assessmentDue || null,
-        status: statuses[draft.step],
+        status:
+          draft.step === 4 && draft.acknowledged
+            ? "Zapoznano z oceną"
+            : statuses[draft.step],
         draft,
       };
     } else {

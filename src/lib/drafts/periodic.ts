@@ -25,6 +25,12 @@ const meeting = z.object({
   assessmentDue: z.union([z.iso.date(), z.literal("")]),
   expectations: z.string(),
   goals: z.string(),
+  trigger: z
+    .enum(["indefinite_contract", "previous_assessment", "negative_assessment"])
+    .optional(),
+  anchor: z.union([z.iso.date(), z.literal("")]).optional(),
+  absenceFrom: z.union([z.iso.date(), z.literal("")]).optional(),
+  absenceTo: z.union([z.iso.date(), z.literal("")]).optional(),
 });
 const schema = z.object({
   version: z.string(),
@@ -42,6 +48,7 @@ const schema = z.object({
   interview: z.boolean(),
   justification: z.string(),
   developmentNotes: z.string().default(""),
+  acknowledged: z.union([z.iso.date(), z.literal("")]).optional(),
   meeting,
 });
 export type PeriodicDraft = z.infer<typeof schema>;

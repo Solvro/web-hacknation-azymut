@@ -69,7 +69,7 @@ export async function sendReminder(actor: Actor, kind: CaseKind) {
     const result = await db.execute(sql`
       INSERT INTO reminder(id,workspace,kind)
       SELECT ${randomUUID()},workspace,kind FROM assessment
-      WHERE workspace=${actor.workspace} AND kind=${kind} AND status <> 'Do podpisu'
+      WHERE workspace=${actor.workspace} AND kind=${kind} AND status NOT IN ('Do podpisu', 'Zapoznano z oceną')
       ON CONFLICT DO NOTHING RETURNING id
     `);
     if (!result.rows.length) return false;

@@ -1,3 +1,5 @@
+import { OpeningDeadlines } from "./periodic-deadlines";
+import type { OpeningTrigger } from "../lib/scoring/calendar";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
 export interface OpeningMeeting {
@@ -5,6 +7,10 @@ export interface OpeningMeeting {
   assessmentDue: string;
   expectations: string;
   goals: string;
+  trigger?: OpeningTrigger;
+  anchor?: string;
+  absenceFrom?: string;
+  absenceTo?: string;
 }
 
 export const emptyMeeting: OpeningMeeting = {
@@ -93,6 +99,20 @@ export function OpeningMeetingForm({
       </section>
       <section>
         <h2>Terminy do arkusza</h2>
+        <OpeningDeadlines
+          trigger={meeting.trigger ?? "indefinite_contract"}
+          anchor={meeting.anchor ?? ""}
+          opening={meeting.date}
+          absenceFrom={meeting.absenceFrom ?? ""}
+          absenceTo={meeting.absenceTo ?? ""}
+          onChange={(trigger, anchor) =>
+            onChange({ ...meeting, trigger, anchor })
+          }
+          onAbsence={(absenceFrom, absenceTo) =>
+            onChange({ ...meeting, absenceFrom, absenceTo })
+          }
+          onUseDue={(assessmentDue) => onChange({ ...meeting, assessmentDue })}
+        />
         <label className="field">
           Data rozmowy rozpoczynającej
           <input

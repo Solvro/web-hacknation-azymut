@@ -10,6 +10,8 @@ const dateTime = new Intl.DateTimeFormat("pl-PL", {
   timeStyle: "short",
   timeZone: "Europe/Warsaw",
 });
+const isComplete = (status: string) =>
+  status === "Do podpisu" || status === "Zapoznano z oceną";
 const names = { periodic: "Ocena okresowa", first: "Pierwsza ocena" };
 
 export default async function HRPage() {
@@ -62,12 +64,10 @@ export default async function HRPage() {
                         "Do ustalenia"}
                       {item.due &&
                         item.due < today &&
-                        item.status !== "Do podpisu" && (
-                          <small>Po terminie</small>
-                        )}
+                        !isComplete(item.status) && <small>Po terminie</small>}
                     </td>
                     <td>
-                      {item.status === "Do podpisu" ? (
+                      {isComplete(item.status) ? (
                         "—"
                       ) : (
                         <Remind kind={item.kind} unread={item.unread} />

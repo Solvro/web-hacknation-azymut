@@ -1,5 +1,6 @@
 "use client";
 
+import { FollowUpDeadlines } from "./periodic-deadlines";
 import { CaseControls } from "./case-controls";
 import { Logout } from "./logout";
 
@@ -197,6 +198,7 @@ function AssessmentEditor({
   const [developmentNotes, setDevelopmentNotes] = useState(
     initial?.developmentNotes ?? "",
   );
+  const [acknowledged, setAcknowledged] = useState(initial?.acknowledged ?? "");
   const [meeting, setMeeting] = useState(initial?.meeting ?? emptyMeeting);
   const [saved, setSaved] = useState(false);
   const draft: PeriodicDraft = {
@@ -212,6 +214,7 @@ function AssessmentEditor({
     interview,
     justification,
     developmentNotes,
+    acknowledged,
     meeting,
   };
   const serializedDraft = JSON.stringify(
@@ -567,9 +570,11 @@ function AssessmentEditor({
                     placeholder="Jaką umiejętność warto rozwinąć? Jakie działanie omówiliście podczas rozmowy?"
                   />
                 </label>
-                {result.status === "scored" && !result.positive && (
+                {result.status === "scored" && (
                   <label className="field">
-                    Uzasadnienie oceny negatywnej (wymagane)
+                    {result.positive
+                      ? "Uzasadnienie oceny pozytywnej (opcjonalnie)"
+                      : "Uzasadnienie oceny negatywnej (wymagane)"}
                     <textarea
                       value={justification}
                       onChange={(e) => setJustification(e.target.value)}
@@ -631,7 +636,7 @@ function AssessmentEditor({
                 <p className="whitespace-pre-wrap wrap-anywhere">
                   {developmentNotes}
                 </p>
-                {!result.positive && (
+                {justification.trim() && (
                   <p>
                     <strong>Uzasadnienie</strong>
                     <br />
@@ -639,6 +644,11 @@ function AssessmentEditor({
                   </p>
                 )}
               </section>
+              <FollowUpDeadlines
+                positive={result.positive}
+                acknowledged={acknowledged}
+                onChange={setAcknowledged}
+              />
               <AssessmentDownload
                 form={form}
                 payload={{
