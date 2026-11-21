@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen } from "lucide-react";
+import { BookOpen, X } from "lucide-react";
 
 type Mode = "formal" | "conversation";
 type Evidence = { label: string; text: string };
@@ -37,12 +37,16 @@ const messages: Record<Exclude<Reply["status"], "answered">, string> = {
     "Nie udało się potwierdzić cytatów z odpowiedzi. Poniżej znajdziesz odszukane fragmenty.",
   invalid: "Wpisz pytanie od 5 do 1200 znaków i spróbuj ponownie.",
 };
-export function AssistantPanel({
+export type Scope = "first" | "periodic";
+
+export function AssistantChat({
   scope,
   evidence,
+  suggestions = [],
 }: {
-  scope: "first" | "periodic";
+  scope: Scope;
   evidence: Evidence[];
+  suggestions?: string[];
 }) {
   const [mode, setMode] = useState<Mode>("formal");
   const [question, setQuestion] = useState("");
@@ -51,11 +55,7 @@ export function AssistantPanel({
     { question: string; mode: Mode; reply: Reply }[]
   >([]);
   return (
-    <section className="assistant-panel">
-      <details>
-        <summary>
-          <BookOpen size={18} className="inline" /> Zapytaj asystenta
-        </summary>
+    <div className="assistant-panel">
         <div className="actions assistant-modes">
           <button
             disabled={busy}
@@ -120,6 +120,15 @@ export function AssistantPanel({
               }
             />
           </label>
+          {suggestions.length > 0 && mode === "formal" && (
+            <div className="chips">
+              {suggestions.map((text) => (
+                <button type="button" key={text} onClick={() => setQuestion(text)}>
+                  {text}
+                </button>
+              ))}
+            </div>
+          )}
           <small>
             {mode === "conversation"
               ? "Asystent może użyć przykładów z tej oceny. Wpisuj wyłącznie dane fikcyjne."
@@ -160,7 +169,48 @@ export function AssistantPanel({
             </article>
           ))}
         </div>
-      </details>
-    </section>
+    </div>
+  );
+}
+
+export function AssistantPanel({
+  scope,
+  evidence,
+}: {
+  scope: Scope;
+  evidence: Evidence[];
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      {!open && (
+        <button
+          type="button"
+          className="assistant-fab"
+          onClick={() => setOpen(true)}
+        >
+          <BookOpen aria-hidden="true" /> Zapytaj asystenta
+        </button>
+      )}
+      <div className="drawer" hidden={!open} aria-label="Asystent">
+        <div className="drawer-head">
+          <strong>
+            <BookOpen aria-hidden="true" size={18} /> Asystent
+          </strong>
+          <button
+            type="button"
+            aria-label="Zamknij asystenta"
+            onClick={() => setOpen(false)}
+          >
+            <X aria-hidden="true" size={18} />
+          </button>
+        </div>
+        <p className="drawer-note">
+          Odpowiadam na podstawie przepisów i poradników. Nie wybieram oceny za
+          Ciebie.
+        </p>
+        <AssistantChat scope={scope} evidence={evidence} />
+      </div>
+    </>
   );
 }

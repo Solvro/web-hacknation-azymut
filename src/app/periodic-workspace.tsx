@@ -2,7 +2,7 @@
 
 import { FollowUpDeadlines } from "./periodic-deadlines";
 import { CaseControls } from "./case-controls";
-import { Logout } from "./logout";
+import { AppHeader } from "./app-header";
 
 import { AssistantPanel } from "./assistant-panel";
 
@@ -14,7 +14,6 @@ import {
   MeetingSummary,
   OpeningMeetingForm,
 } from "./opening-meeting";
-import Link from "next/link";
 import { AssessmentDownload } from "./assessment-download";
 import { useEffect, useState } from "react";
 import {
@@ -29,7 +28,6 @@ import {
   BriefcaseBusiness,
   Check,
   CircleCheck,
-  Compass,
   FileText,
   Users,
 } from "lucide-react";
@@ -80,12 +78,14 @@ export function PeriodicWorkspace({
   remoteDraft,
   remoteRevision,
   unread,
+  sample,
 }: {
   model: CompetencyModel;
   workspace?: string;
   remoteDraft?: unknown;
   remoteRevision: number;
   unread: boolean;
+  sample?: boolean;
 }) {
   const [initial, setInitial] = useState<PeriodicDraft | null | undefined>(
     undefined,
@@ -124,8 +124,13 @@ export function PeriodicWorkspace({
     } catch {
       setNotice("Nie udało się odczytać szkicu z tej karty.");
     }
+    if (sample) {
+      restored = trainingAssessment(model);
+      setNotice("Otwarto przykładową sprawę szkoleniową.");
+      window.history.replaceState(null, "", "/okresowa");
+    }
     setInitial(restored);
-  }, [model, remoteDraft, remoteRevision, storageKey, workspace]);
+  }, [model, remoteDraft, remoteRevision, storageKey, workspace, sample]);
 
   if (initial === undefined)
     return <main aria-busy="true">Otwieranie arkusza…</main>;
@@ -214,6 +219,7 @@ function AssessmentEditor({
   const [acknowledged, setAcknowledged] = useState(initial?.acknowledged ?? "");
   const [meeting, setMeeting] = useState(initial?.meeting ?? emptyMeeting);
   const [saved, setSaved] = useState(false);
+  const [showExtra, setShowExtra] = useState(extra.length > 0);
   const draft: PeriodicDraft = {
     version: model.version,
     sample: initial?.sample,
@@ -271,21 +277,12 @@ function AssessmentEditor({
 
   return (
     <>
-      <header className="top">
-        <div className="brand">
-          <Compass aria-hidden="true" size={32} /> Azymut
-        </div>
-        <Link href="/pierwsza">Pierwsza ocena</Link>
-        <span className="demo">
-          {workspace ? <Logout /> : "Demo przełożonego"}
-        </span>
-      </header>
+      <AppHeader authenticated={!!workspace} section="Ocena okresowa" />
       <p className="desktop-only">
         Otwórz Azymut na komputerze, aby przejść przez ocenę.
       </p>
       <div className="shell">
         <aside>
-          <p className="eyebrow">Ścieżka oceny</p>
           <h2>Ocena okresowa</h2>
           <ol className="steps">
             {steps.map((label, i) => (
@@ -309,8 +306,22 @@ function AssessmentEditor({
                 : "Zapis szkicu niedostępny."}
             </small>
             {notice && <small>{notice}</small>}
-            <button onClick={onRestart}>Rozpocznij nową ocenę</button>
+            <button className="link" onClick={onRestart}>
+              Rozpocznij nową ocenę
+            </button>
+            <button className="link" onClick={onSample}>
+              Otwórz przykładową sprawę
+            </button>
           </div>
+          {workspace && (
+            <CaseControls
+              kind="periodic"
+              revision={revision}
+              setRevision={setRevision}
+              unread={unread}
+              draft={draft}
+            />
+          )}
         </aside>
         <main>
           <div className="context">
@@ -360,10 +371,19 @@ function AssessmentEditor({
                   ))}
                 </ul>
               </section>
-              <section>
-                <h2>
-                  Kryteria dodatkowe <small>{extra.length}/3</small>
-                </h2>
+              <details
+                className="disclosure"
+                open={showExtra}
+                onToggle={(e) => setShowExtra(e.currentTarget.open)}
+              >
+                <summary>
+                  Kryteria dodatkowe{" "}
+                  <small>
+                    {extra.length > 0
+                      ? extra.length + "/3 wybrane"
+                      : "opcjonalnie, maks. 3"}
+                  </small>
+                </summary>
                 <p>Wybierz te, które wynikają z obowiązków na stanowisku.</p>
                 <div className="choices">
                   {(Object.keys(criteria) as Criterion[])
@@ -386,13 +406,10 @@ function AssessmentEditor({
                       </label>
                     ))}
                 </div>
-              </section>
+              </details>
               <div className="actions">
                 <button className="primary" onClick={() => go(1)}>
                   Przejdź do rozmowy rozpoczynającej <ArrowRight />
-                </button>
-                <button type="button" onClick={onSample}>
-                  Otwórz sprawę szkoleniową
                 </button>
               </div>
             </>
@@ -740,15 +757,6 @@ function AssessmentEditor({
                 </button>
               </div>
             </>
-          )}
-          {workspace && (
-            <CaseControls
-              kind="periodic"
-              revision={revision}
-              setRevision={setRevision}
-              unread={unread}
-              draft={draft}
-            />
           )}
           <AssistantPanel
             scope="periodic"

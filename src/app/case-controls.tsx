@@ -20,10 +20,9 @@ export function CaseControls({
   const [busy, setBusy] = useState(false);
   const [hasReminder, setHasReminder] = useState(unread);
   return (
-    <section>
-      <h2>Sprawa demonstracyjna</h2>
+    <div className="case-box">
       {hasReminder && (
-        <div className="confirm">
+        <div className="reminder" role="status">
           <p>
             Kadry proszą o sprawdzenie terminu i uzupełnienie bieżącego etapu
             tej oceny.
@@ -46,11 +45,8 @@ export function CaseControls({
           </button>
         </div>
       )}
-      <p>
-        Zapis udostępnia kadrom status i termin. Obserwacje i uzasadnienie widzi
-        przełożony.
-      </p>
       <button
+        className="primary"
         disabled={busy}
         onClick={async () => {
           setBusy(true);
@@ -75,7 +71,11 @@ export function CaseControls({
       >
         {busy ? "Zapisywanie…" : "Zapisz sprawę"}
       </button>
-      {message && <p role="status">{message}</p>}
-    </section>
+      <small>
+        Kadry zobaczą tylko etap i termin. Obserwacje i uzasadnienie zostają u
+        Ciebie.
+      </small>
+      {message && <small role="status">{message}</small>}
+    </div>
   );
 }

@@ -2,14 +2,13 @@
 
 import { CaseControls } from "../case-controls";
 import { firstReportStatus, type FirstDraft } from "../../lib/drafts/first";
-import { Logout } from "../logout";
+import { AppHeader } from "../app-header";
 
 import { AssistantPanel } from "../assistant-panel";
 
-import Link from "next/link";
 import { AssessmentDownload } from "../assessment-download";
 import { useState } from "react";
-import { Compass } from "lucide-react";
+import { Check } from "lucide-react";
 import type { CompetencyModel } from "../../lib/drafts/periodic";
 import {
   criteria,
@@ -140,15 +139,7 @@ export function FirstWorkspace({
 
   return (
     <>
-      <header className="top">
-        <Link className="brand" href="/">
-          <Compass size={32} /> Azymut
-        </Link>
-        <Link href="/">Ocena okresowa</Link>
-        <span className="demo">
-          {authenticated ? <Logout /> : "Demo przełożonego"}
-        </span>
-      </header>
+      <AppHeader authenticated={authenticated} section="Pierwsza ocena" />
       <p className="desktop-only">
         Otwórz Azymut na komputerze, aby przejść przez ocenę.
       </p>
@@ -158,13 +149,25 @@ export function FirstWorkspace({
           <ol className="steps">
             {steps.map((label, i) => (
               <li key={label} aria-current={i === step ? "step" : undefined}>
-                <span>{i + 1}</span>
+                <span>{i < step ? <Check size={15} /> : i + 1}</span>
                 {label}
               </li>
             ))}
           </ol>
+          {authenticated && (
+            <CaseControls
+              kind="first"
+              revision={revision}
+              setRevision={setRevision}
+              unread={unread}
+              draft={draft}
+            />
+          )}
         </aside>
         <main>
+          <div className="context">
+            Pierwsza ocena <span>/</span> Krok {step + 1} z {steps.length}
+          </div>
           <h1>{steps[step]}</h1>
           {notice && <p role="status">{notice}</p>}
           {step === 0 && (
@@ -628,15 +631,6 @@ export function FirstWorkspace({
                 <button onClick={() => go(3)}>Wróć do decyzji</button>
               </div>
             </>
-          )}
-          {authenticated && (
-            <CaseControls
-              kind="first"
-              revision={revision}
-              setRevision={setRevision}
-              unread={unread}
-              draft={draft}
-            />
           )}
           <AssistantPanel
             scope="first"
