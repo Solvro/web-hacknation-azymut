@@ -26,7 +26,7 @@ export default async function FirstPage() {
   return (
     <FirstWorkspace
       model={model}
-      authenticated={!!session}
+      workspace={session?.workspace}
       initial={initial}
       remoteRevision={saved?.revision ?? 0}
       notice={notice}

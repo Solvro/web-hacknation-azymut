@@ -8,7 +8,7 @@ const art = {
   id: "ustawa-42",
   title: "Ustawa",
   locator: "Art. 83 ust. 1",
-  text: "Sprzeciw w terminie 7 dni od dnia zapoznania się z oceną.",
+  text: "Od oceny okresowej służy, w terminie 7 dni od dnia zapoznania się z oceną, sprzeciw do dyrektora generalnego urzędu.",
   url: "https://eli.gov.pl",
   scope: "both",
   kind: "law",
@@ -36,7 +36,7 @@ test("wyszukuje podstawę sprzeciwu i dokładny paragraf we właściwej ścieżc
 test("akceptuje cytat wyłącznie z przekazanej jednostki", () => {
   const output = {
     answer: "Siedem dni.",
-    citations: [{ id: art.id, quote: "Sprzeciw w terminie 7 dni" }],
+    citations: [{ id: art.id, quote: "w terminie 7 dni" }],
   };
   assert.ok(verifyAnswer(output, [art]));
   assert.equal(verifyAnswer(output, [section]), null);
@@ -55,6 +55,16 @@ test("akceptuje cytat wyłącznie z przekazanej jednostki", () => {
     null,
   );
   assert.equal(verifyAnswer({ ...output, citations: [] }, [art]), null);
+});
+
+test("odpowiada na przykładowe pytanie o termin sprzeciwu wyłącznie z właściwym cytatem", () => {
+  const question = "Ile dni ma pracownik na wniesienie sprzeciwu?";
+  const answer = formalRuleAnswer(question, "periodic", [art]);
+  assert.match(answer.answer, /7 dni od zapoznania się z oceną/);
+  assert.equal(answer.sources[0].locator, art.locator);
+  assert.equal(formalRuleAnswer(question, "first", [art]), null);
+  assert.equal(formalRuleAnswer(question, "periodic", [section]), null);
+  assert.equal(formalRuleAnswer("Jak wnieść sprzeciw?", "periodic", [art]), null);
 });
 
 test("objaśnia skutki podanej oceny 1 pkt tylko dla okresowej i z właściwą jednostką", () => {

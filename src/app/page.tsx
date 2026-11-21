@@ -67,8 +67,8 @@ export default async function Home() {
             <BookOpen aria-hidden="true" />
             <strong>Zapytaj asystenta</strong>
             <span>
-              Pytanie o zasady, terminy albo przygotowanie rozmowy. Każda
-              odpowiedź wskazuje przepis lub poradnik.
+              Zapytaj o zasady, terminy albo przygotowanie rozmowy. Asystent
+              wskazuje źródła lub informuje, gdy brakuje podstaw do odpowiedzi.
             </span>
             <span className="status idle">Odpowiada na podstawie bazy wiedzy</span>
             <em>
@@ -79,8 +79,8 @@ export default async function Home() {
         <Link className="sample" href="/okresowa?przyklad=1">
           <PlayCircle aria-hidden="true" />
           <span>
-            <strong>Wypróbuj na przykładowej ocenie.</strong> Przeanalizuj notatki,
-            znajdź wskaźniki i przygotuj agendę rozmowy.
+            <strong>Wypróbuj na przykładowej ocenie.</strong> Przeanalizuj notatki
+            i przygotuj agendę rozmowy w osobnym szkicu szkoleniowym.
           </span>
           <ArrowRight aria-hidden="true" />
         </Link>

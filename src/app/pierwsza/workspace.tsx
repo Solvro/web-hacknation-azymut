@@ -2,13 +2,13 @@
 
 import { CaseControls } from "../case-controls";
 import type { ReminderKind } from "../../lib/cases/next-action";
-import { firstReportStatus, type FirstDraft } from "../../lib/drafts/first";
+import { firstReportStatus, validateFirstDraft, type FirstDraft } from "../../lib/drafts/first";
 import { AppHeader } from "../app-header";
 
 import { AssistantPanel } from "../assistant-panel";
 
 import { AssessmentDownload } from "../assessment-download";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import type { CompetencyModel } from "../../lib/drafts/periodic";
 import {
@@ -48,21 +48,50 @@ const steps = [
 ];
 const behaviorPoints: Points[] = [1, 3, 5, 7, 9];
 
-export function FirstWorkspace({
-  model,
-  authenticated,
-  initial,
-  remoteRevision,
-  reminder,
-  notice,
-}: {
+type WorkspaceProps = {
   model: CompetencyModel;
-  authenticated: boolean;
+  workspace?: string;
   initial?: FirstDraft;
   remoteRevision: number;
   reminder: ReminderKind | null;
   notice?: string;
-}) {
+};
+
+export function FirstWorkspace(props: WorkspaceProps) {
+  const { workspace, initial, remoteRevision, model, notice } = props;
+  const storageKey = "azymut.first-draft.v1" + (workspace ? ":" + workspace : "");
+  const [restored, setRestored] = useState<{ draft?: FirstDraft; notice?: string }>();
+  useEffect(() => {
+    let draft = initial;
+    let restoreNotice = notice;
+    try {
+      const raw = sessionStorage.getItem(storageKey);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved.revision === remoteRevision) {
+          draft = validateFirstDraft(saved.draft, model);
+          restoreNotice = "Wznowiono szkic z tej karty.";
+        }
+      }
+    } catch {
+      restoreNotice = "Nie udało się odczytać szkicu z tej karty.";
+    }
+    setRestored({ draft, notice: restoreNotice });
+  }, [storageKey, initial, remoteRevision, model, notice]);
+
+  if (!restored) return <main aria-busy="true">Otwieranie arkusza…</main>;
+  return <FirstEditor {...props} initial={restored.draft} notice={restored.notice} storageKey={storageKey} />;
+}
+
+function FirstEditor({
+  model,
+  workspace,
+  initial,
+  remoteRevision,
+  reminder,
+  notice,
+  storageKey,
+}: WorkspaceProps & { storageKey: string }) {
   const [step, setStep] = useState(initial?.step ?? 0);
   const [start, setStart] = useState(initial?.start ?? "2026-02-02");
   const [end, setEnd] = useState(initial?.end ?? "2027-02-01");
@@ -93,6 +122,8 @@ export function FirstWorkspace({
   const [development, setDevelopment] = useState(initial?.development ?? "");
 
   const [revision, setRevision] = useState(remoteRevision);
+  const [saved, setSaved] = useState(false);
+  const stepHeading = useRef<HTMLHeadingElement>(null);
 
   const windowDates =
     start && end && (!replacement || agreement)
@@ -122,6 +153,15 @@ export function FirstWorkspace({
     development,
     acknowledged,
   };
+  const serializedDraft = JSON.stringify({ revision, draft });
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(storageKey, serializedDraft);
+      setSaved(true);
+    } catch {
+      setSaved(false);
+    }
+  }, [storageKey, serializedDraft]);
   const result = firstResult({ decisions, exam, report });
   const criterion = firstCriteria[active];
   const indicators = model.competencies[criterion];
@@ -136,6 +176,7 @@ export function FirstWorkspace({
     if (next !== 4) setAcknowledged("");
     setStep(next);
     window.scrollTo(0, 0);
+    requestAnimationFrame(() => stepHeading.current?.focus({ preventScroll: true }));
   }
   function invalidateDecision() {
     setDecisions((previous) => ({ ...previous, [criterion]: null }));
@@ -143,7 +184,7 @@ export function FirstWorkspace({
 
   return (
     <>
-      <AppHeader authenticated={authenticated} section="Pierwsza ocena" />
+      <AppHeader authenticated={!!workspace} section="Pierwsza ocena" />
       <p className="desktop-only">
         Otwórz Azymut na komputerze, aby przejść przez ocenę.
       </p>
@@ -158,7 +199,10 @@ export function FirstWorkspace({
               </li>
             ))}
           </ol>
-          {authenticated && (
+          <div className="draft-status">
+            <small role="status">{saved ? "Szkic zapisany w tej karcie." : "Zapis szkicu niedostępny."}</small>
+          </div>
+          {workspace && (
             <CaseControls
               kind="first"
               revision={revision}
@@ -172,7 +216,7 @@ export function FirstWorkspace({
           <div className="context">
             Pierwsza ocena <span>/</span> Krok {step + 1} z {steps.length}
           </div>
-          <h1>{steps[step]}</h1>
+          <h1 ref={stepHeading} tabIndex={-1}>{steps[step]}</h1>
           {notice && <p role="status">{notice}</p>}
           {step === 0 && (
             <form
@@ -283,10 +327,18 @@ export function FirstWorkspace({
                   />
                 </label>
                 {windowDates && (
-                  <p>
-                    Okno dokonania oceny: {windowDates.earliestAssessment} –{" "}
-                    {windowDates.latestAssessment}.
-                  </p>
+                  <>
+                    <p>
+                      Okno dokonania oceny: {windowDates.earliestAssessment} –{" "}
+                      {windowDates.latestAssessment}.
+                    </p>
+                    {!reportFrom && !reportDue && windowDates.earliestAssessment <= windowDates.latestAssessment && (
+                      <button type="button" onClick={() => {
+                        setReportFrom(windowDates.earliestAssessment);
+                        setReportDue(windowDates.latestAssessment);
+                      }}>Użyj wyliczonego okna</button>
+                    )}
+                  </>
                 )}
                 {windowDates &&
                   windowDates.earliestAssessment >
@@ -343,6 +395,7 @@ export function FirstWorkspace({
                       Termin upłynął i sprawozdanie nie wpłynęło
                     </label>
                   )}
+                  {!report && <p>Aby przejść dalej, podaj datę wpływu sprawozdania lub zaznacz, że termin minął.</p>}
                 </section>
                 <section>
                   <h2>Egzamin ze służby przygotowawczej</h2>

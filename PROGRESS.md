@@ -1,5 +1,7 @@
 # Postęp Azymutu
 
+- Audyt UX obejmował rozdzielenie przykładu i własnego szkicu okresowej, powrót z obserwacji do ustaleń, zachowanie treści notatek po zmianie kryteriów i czytelniejsze komunikaty logowania. Scenariusze regresji opisano w [UX-AUDIT.md](UX-AUDIT.md).
+
 - 21 listopada — przeprojektowano układ drukowanych arkuszy i sprawozdania. Każda strona ma nagłówek, stopkę i numer; pola podpisu o wysokości 44 pkt znajdują się po prawej stronie etykiet. Dopracowano paginację i skrócono propozycję uzasadnienia do przykładów z pracy i rzeczywistych przyczyn oceny negatywnej. Wyrenderowano arkusze B/C, pierwszą ocenę, sprawozdanie, wniosek o kolejny stopień i wielostronicowy wariant z długim tekstem. Sprawdzono zawartość i wymiary pól. Pełny przebieg w Chrome na buildzie produkcyjnym z Gemmą wygenerował dwustronicowy arkusz B z wynikiem i podpisami na tej samej stronie. Przeszło 39 testów, kontrola typów i build.
 
 - 21 listopada — uproszczono obsługę notatek. Wyniki analizy mają widoczny nagłówek, cytaty i akcję zapisującą całą partię. Zapis przenosi do pierwszego wskaźnika bez wyboru zachowania, a przykłady pozostają przy wskaźniku i w agendzie. Daty z początku notatek, propozycje treści i znane daty arkusza uzupełniają się bez przepisywania. W Chrome z Gemmą 4 12B sprawdzono przebieg od analizy do pobrania PDF z trzema uzupełnionymi datami. Przeszło 38 testów i kontrola typów.

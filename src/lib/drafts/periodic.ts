@@ -10,6 +10,11 @@ import {
 
 export const draftStorageKey = "azymut.periodic-draft.v1";
 
+export function periodicStorageKey(workspace?: string, sample = false) {
+  const key = workspace ? draftStorageKey + ":" + workspace : draftStorageKey;
+  return sample ? key + ":training" : key;
+}
+
 export interface CompetencyModel {
   version: string;
   competencies: Record<
@@ -63,6 +68,33 @@ const schema = z.object({
   meeting,
 });
 export type PeriodicDraft = z.infer<typeof schema>;
+
+export function retainPeriodicEvidence(
+  model: CompetencyModel,
+  form: PeriodicDraft["form"],
+  extra: PeriodicDraft["extra"],
+  draft: Pick<PeriodicDraft, "ratings" | "examples" | "notes" | "plannedIndicators" | "decisions">,
+) {
+  const criteria = new Set(periodicCriteria(form, extra));
+  const indicators = new Set(
+    [...criteria].flatMap((criterion) =>
+      model.competencies[criterion].map(({ id }) => id),
+    ),
+  );
+  return {
+    ratings: Object.fromEntries(Object.entries(draft.ratings).filter(([id]) => indicators.has(id))),
+    examples: Object.fromEntries(Object.entries(draft.examples).filter(([id]) => indicators.has(id))),
+    notes: (draft.notes ?? []).map((note) =>
+      note.indicatorId && !indicators.has(note.indicatorId)
+        ? { ...note, indicatorId: null, gap: note.gap ?? "context" as const }
+        : note,
+    ),
+    plannedIndicators: (draft.plannedIndicators ?? []).filter((id) => indicators.has(id)),
+    decisions: Object.fromEntries(
+      Object.entries(draft.decisions).filter(([key]) => criteria.has(key as Criterion)),
+    ),
+  };
+}
 
 export function readPeriodicDraft(
   raw: string,

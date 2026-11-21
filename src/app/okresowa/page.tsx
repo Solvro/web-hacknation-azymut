@@ -11,20 +11,23 @@ export default async function Page({
   searchParams: Promise<{ przyklad?: string }>;
 }) {
   const { przyklad } = await searchParams;
+  const sample = przyklad === "1";
   const session = await requireRole(["supervisor"]);
+  const workspace = session?.workspace;
   const [model, saved, cases] = await Promise.all([
     loadCompetencyModel(),
-    session ? readCase(session.workspace, "periodic") : undefined,
-    session ? listCases(session.workspace) : [],
+    workspace && !sample ? readCase(workspace, "periodic") : undefined,
+    workspace && !sample ? listCases(workspace) : [],
   ]);
   return (
     <PeriodicWorkspace
+      key={sample ? "sample" : "case"}
       model={model}
-      workspace={session?.workspace}
+      workspace={workspace}
       remoteDraft={saved?.draft}
       remoteRevision={saved?.revision ?? 0}
       reminder={cases.find((item) => item.kind === "periodic")?.reminder ?? null}
-      sample={przyklad === "1"}
+      sample={sample}
     />
   );
 }

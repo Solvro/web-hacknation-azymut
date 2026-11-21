@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FollowUpDeadlines } from "./periodic-deadlines";
 import { CaseControls } from "./case-controls";
 import type { ReminderKind } from "../lib/cases/next-action";
@@ -27,8 +28,9 @@ import {
 import { AssessmentDownload } from "./assessment-download";
 import { useEffect, useRef, useState } from "react";
 import {
-  draftStorageKey,
+  periodicStorageKey,
   readPeriodicDraft,
+  retainPeriodicEvidence,
   type CompetencyModel,
   type PeriodicDraft,
 } from "../lib/drafts/periodic";
@@ -103,12 +105,11 @@ export function PeriodicWorkspace({
   const [notice, setNotice] = useState("");
   const [generation, setGeneration] = useState(0);
   const [revision, setRevision] = useState(remoteRevision);
-  const storageKey = workspace
-    ? draftStorageKey + ":" + workspace
-    : draftStorageKey;
+  const storageKey = periodicStorageKey(workspace, sample);
+  const syncWithServer = !!workspace && !sample;
 
   useEffect(() => {
-    let restored: PeriodicDraft | null = null;
+    let restored = sample ? trainingAssessment(model) : null;
     if (remoteDraft) {
       try {
         restored = readPeriodicDraft(JSON.stringify(remoteDraft), model);
@@ -122,10 +123,10 @@ export function PeriodicWorkspace({
     try {
       const raw = sessionStorage.getItem(storageKey);
       if (raw) {
-        const envelope = workspace ? JSON.parse(raw) : null;
-        if (!workspace || envelope.revision === remoteRevision) {
+        const envelope = syncWithServer ? JSON.parse(raw) : null;
+        if (!syncWithServer || envelope.revision === remoteRevision) {
           restored = readPeriodicDraft(
-            workspace ? JSON.stringify(envelope.draft) : raw,
+            syncWithServer ? JSON.stringify(envelope.draft) : raw,
             model,
           );
           setNotice("Wznowiono szkic.");
@@ -134,13 +135,8 @@ export function PeriodicWorkspace({
     } catch {
       setNotice("Nie udało się odczytać szkicu z tej karty.");
     }
-    if (sample) {
-      restored = trainingAssessment(model);
-      setNotice("Otwarto przykładową sprawę szkoleniową.");
-      window.history.replaceState(null, "", "/okresowa");
-    }
     setInitial(restored);
-  }, [model, remoteDraft, remoteRevision, storageKey, workspace, sample]);
+  }, [model, remoteDraft, remoteRevision, storageKey, syncWithServer, sample]);
 
   if (initial === undefined)
     return <main aria-busy="true">Otwieranie arkusza…</main>;
@@ -150,19 +146,18 @@ export function PeriodicWorkspace({
       model={model}
       initial={initial}
       notice={notice}
-      workspace={workspace}
+      authenticated={!!workspace}
+      syncWithServer={syncWithServer}
+      sample={!!sample}
       reminder={reminder}
       storageKey={storageKey}
       revision={revision}
       setRevision={setRevision}
-      onSample={() => {
-        setInitial(trainingAssessment(model));
-        setNotice("Otwarto sprawę szkoleniową.");
-        setGeneration((value) => value + 1);
-        window.scrollTo(0, 0);
-      }}
       onRestart={() => {
-        if (!window.confirm("Rozpocząć nową ocenę i usunąć szkic z tej karty?"))
+        const prompt = sample
+          ? "Zacząć przykład od nowa i usunąć zmiany w szkicu szkoleniowym?"
+          : "Rozpocząć nową ocenę i usunąć szkic z tej karty?";
+        if (!window.confirm(prompt))
           return;
         try {
           sessionStorage.removeItem(storageKey);
@@ -170,7 +165,7 @@ export function PeriodicWorkspace({
           setNotice("Nie udało się usunąć szkicu. Spróbuj ponownie.");
           return;
         }
-        setInitial(null);
+        setInitial(sample ? trainingAssessment(model) : null);
         setNotice("");
         setGeneration((value) => value + 1);
       }}
@@ -182,24 +177,26 @@ function AssessmentEditor({
   model,
   initial,
   notice,
-  workspace,
+  authenticated,
+  syncWithServer,
+  sample,
   reminder,
   storageKey,
   revision,
   setRevision,
   onRestart,
-  onSample,
 }: {
   model: CompetencyModel;
   initial: PeriodicDraft | null;
   notice: string;
-  workspace?: string;
+  authenticated: boolean;
+  syncWithServer: boolean;
+  sample: boolean;
   reminder: ReminderKind | null;
   storageKey: string;
   revision: number;
   setRevision: (value: number) => void;
   onRestart: () => void;
-  onSample: () => void;
 }) {
   const [form, setForm] = useState<PeriodicForm>(initial?.form ?? "B");
   const [extra, setExtra] = useState<Criterion[]>(initial?.extra ?? []);
@@ -216,6 +213,7 @@ function AssessmentEditor({
   const [plannedIndicators, setPlannedIndicators] = useState(initial?.plannedIndicators ?? []);
   const [notes, setNotes] = useState<SavedNote[]>(initial?.notes ?? []);
   const indicatorHeading = useRef<HTMLHeadingElement>(null);
+  const stepHeading = useRef<HTMLHeadingElement>(null);
   const [decisions, setDecisions] = useState<Decisions>(
     initial?.decisions ?? {},
   );
@@ -263,7 +261,7 @@ function AssessmentEditor({
     meeting,
   };
   const serializedDraft = JSON.stringify(
-    workspace ? { revision, draft } : draft,
+    syncWithServer ? { revision, draft } : draft,
   );
   useEffect(() => {
     try {
@@ -295,6 +293,7 @@ function AssessmentEditor({
   function go(next: number) {
     setStep(next);
     window.scrollTo(0, 0);
+    requestAnimationFrame(() => stepHeading.current?.focus({ preventScroll: true }));
   }
   function chooseCriterion(i: number) {
     setActive(i);
@@ -305,26 +304,34 @@ function AssessmentEditor({
     setInterview(false);
   }
 
-  function chooseForm(next: PeriodicForm) {
-    if (form === next) return;
-    setForm(next);
-    setMeeting(emptyMeeting);
-    setExtra([]);
+  function changeScope(nextForm: PeriodicForm, nextExtra: Criterion[]) {
+    const retained = retainPeriodicEvidence(model, nextForm, nextExtra, draft);
+    const losesAssessment =
+      Object.keys(retained.ratings).length < Object.keys(ratings).length ||
+      Object.keys(retained.examples).length < Object.keys(examples).length ||
+      Object.keys(retained.decisions).length < Object.keys(decisions).length;
+    if (losesAssessment && !window.confirm(
+      "Zmiana kryteriów usunie przypisane do nich wybory zachowań, przykłady i decyzje. Notatki zostaną w dzienniku jako tematy do rozmowy. Zmienić kryteria?",
+    )) return false;
+    setForm(nextForm);
+    setExtra(nextExtra);
     setActive(0);
     setIndex(0);
-    setPlannedIndicators([]);
+    setRatings(retained.ratings);
+    setExamples(retained.examples);
+    setNotes(retained.notes);
+    setPlannedIndicators(retained.plannedIndicators);
+    setDecisions(retained.decisions);
+    setInterview(false);
+    setAcknowledged("");
+    return true;
   }
 
   function toggleCriterion(criterion: Criterion) {
-    if (extra.includes(criterion)) {
-      setExtra(extra.filter((item) => item !== criterion));
-      setActive(0);
-      setIndex(0);
-      const removed = new Set(model.competencies[criterion].map(({ id }) => id));
-      setPlannedIndicators((previous) => previous.filter((id) => !removed.has(id)));
-    } else if (extra.length < 3) {
-      setExtra([...extra, criterion]);
-    }
+    const nextExtra = extra.includes(criterion)
+      ? extra.filter((item) => item !== criterion)
+      : [...extra, criterion];
+    if (nextExtra.length <= 3) changeScope(form, nextExtra);
   }
 
   function openIndicator(id: string) {
@@ -343,7 +350,7 @@ function AssessmentEditor({
 
   return (
     <>
-      <AppHeader authenticated={!!workspace} section="Ocena okresowa" />
+      <AppHeader authenticated={authenticated} section="Ocena okresowa" />
       <p className="desktop-only">
         Otwórz Azymut na komputerze, aby przejść przez ocenę.
       </p>
@@ -368,18 +375,18 @@ function AssessmentEditor({
           <div className="draft-status">
             <small role="status">
               {saved
-                ? "Szkic zapisany w tej karcie."
+                ? sample ? "Szkic szkoleniowy zapisany w tej karcie." : "Szkic zapisany w tej karcie."
                 : "Zapis szkicu niedostępny."}
             </small>
             {notice && <small>{notice}</small>}
             <button className="link" onClick={onRestart}>
-              Rozpocznij nową ocenę
+              {sample ? "Zacznij przykład od nowa" : "Rozpocznij nową ocenę"}
             </button>
-            <button className="link" onClick={onSample}>
-              Otwórz przykładową sprawę
-            </button>
+            <Link className="link" href={sample ? "/okresowa" : "/okresowa?przyklad=1"}>
+              {sample ? "Przejdź do swojej oceny" : "Otwórz przykładową sprawę"}
+            </Link>
           </div>
-          {workspace && (
+          {syncWithServer && (
             <CaseControls
               kind="periodic"
               revision={revision}
@@ -393,12 +400,11 @@ function AssessmentEditor({
           <div className="context">
             Ocena okresowa <span>/</span> Krok {step + 1} z {steps.length}
           </div>
-          <h1>{steps[step]}</h1>
+          <h1 ref={stepHeading} tabIndex={-1}>{steps[step]}</h1>
           {draft.sample && (
             <p className="confirm">
-              Sprawa szkoleniowa. Cztery decyzje wpisał fikcyjny przełożony.
-              Uzupełnij obserwację, przejdź przez rozmowę i wybierz ocenę
-              zarządzania ludźmi.
+              Sprawa szkoleniowa.
+              {step === 2 && " Cztery decyzje wpisał fikcyjny przełożony. Uzupełnij obserwację i przejdź do rozmowy."}
             </p>
           )}
           {step === 0 && (
@@ -414,8 +420,9 @@ function AssessmentEditor({
                 planned={plannedIndicators}
                 onDescription={setPositionDescription}
                 onForm={(next, text) => {
-                  chooseForm(next);
+                  if (next !== form && !changeScope(next, [])) return false;
                   setPositionDescription(text);
+                  return true;
                 }}
                 onCriterion={toggleCriterion}
                 onIndicator={(id) => setPlannedIndicators((previous) =>
@@ -431,7 +438,9 @@ function AssessmentEditor({
                     key={f}
                     aria-pressed={f === form}
                     className="role"
-                    onClick={() => chooseForm(f)}
+                    onClick={() => {
+                      if (f !== form) changeScope(f, []);
+                    }}
                   >
                     {f === "B" ? <Users /> : <BriefcaseBusiness />}
                     <span>Arkusz {f}</span>
@@ -515,8 +524,7 @@ function AssessmentEditor({
               )}
             </>
           )}
-          {step >= 2 && (
-            <ObservationInbox
+          <ObservationInbox
               model={model}
               form={form}
               extra={extra}
@@ -532,8 +540,7 @@ function AssessmentEditor({
                 if (pending?.indicatorId) openIndicator(pending.indicatorId);
                 else go(3);
               }}
-            />
-          )}
+          />
           {step === 2 && (
             <>
               {notes.length > 0 && (
@@ -657,6 +664,7 @@ function AssessmentEditor({
                 />
               </section>
               <div className="actions">
+                <button onClick={() => go(1)}>Wróć do rozmowy rozpoczynającej</button>
                 {nextNoteIndicator && (
                   <button className="primary" onClick={() => openIndicator(nextNoteIndicator)}>
                     Następny wskaźnik z notatką <ArrowRight />

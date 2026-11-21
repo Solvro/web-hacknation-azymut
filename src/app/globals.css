@@ -410,7 +410,7 @@ summary {
   gap: 0.5rem;
   padding: 0.5rem;
 }
-.draft-status button {
+.draft-status .link {
   font-size: 0.85rem;
 }
 
@@ -600,6 +600,7 @@ a.brand {
 }
 
 /* Panel boczny ścieżki */
+.draft-status a.link,
 button.link {
   border: 0;
   background: none;
@@ -609,6 +610,7 @@ button.link {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.draft-status a.link:hover,
 button.link:hover {
   color: var(--purple);
 }

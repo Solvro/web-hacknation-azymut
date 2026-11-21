@@ -25,7 +25,7 @@ export function PositionPlanner({
   extra: Criterion[];
   planned: string[];
   onDescription: (text: string) => void;
-  onForm: (form: PeriodicForm, text: string) => void;
+  onForm: (form: PeriodicForm, text: string) => boolean;
   onCriterion: (criterion: Criterion) => void;
   onIndicator: (id: string) => void;
 }) {
@@ -117,8 +117,7 @@ export function PositionPlanner({
               ) : (
                 <button disabled={formConfirmed} onClick={() => {
                   if (valid.success && (suggestedForm === "B" || suggestedForm === "C")) {
-                    onForm(suggestedForm, valid.data);
-                    setConfirmedForm(suggestedForm);
+                    if (onForm(suggestedForm, valid.data)) setConfirmedForm(suggestedForm);
                   }
                 }}>{formConfirmed ? "Arkusz potwierdzony" : `Potwierdź arkusz ${suggestion.form.kind}`}</button>
               )}

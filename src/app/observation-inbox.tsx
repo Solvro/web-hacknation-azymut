@@ -43,7 +43,7 @@ export function ObservationInbox({
   onSave: (notes: SavedNote[], finished: boolean) => void;
 }) {
   const [text, setText] = useState("");
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [pendingReviews, setReviews] = useState<Review[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const heading = useRef<HTMLHeadingElement>(null);
@@ -51,6 +51,11 @@ export function ObservationInbox({
   const indicators = new Map(selected.flatMap((criterion) =>
     model.competencies[criterion].map(({ id, label }) => [id, { label, criterion }] as const),
   ));
+  const reviews = pendingReviews.map((note) =>
+    note.indicatorId && !indicators.has(note.indicatorId)
+      ? { ...note, indicatorId: null, gap: note.gap ?? "context" as const }
+      : note,
+  );
   const notes = splitNotes(text);
   const valid = notes.length > 0 && notes.length <= maxNotesPerBatch &&
     notes.every((note) => note.length >= 3 && note.length <= maxNoteLength);

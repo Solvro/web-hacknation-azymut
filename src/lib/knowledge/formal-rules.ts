@@ -4,6 +4,17 @@ import { verifyAnswer } from "./verify.ts";
 const rules = [
   {
     match: (q: string) =>
+      /\bsprzeciw\w*\b/.test(q) &&
+      /^(?:ile dni\b|jaki jest termin\b|w jakim terminie\b|do kiedy\b)/.test(q),
+    scope: "periodic",
+    prefix: "ustawa",
+    locator: "Art. 83 ust. 1",
+    anchor: "w terminie 7 dni od dnia zapoznania się z oceną",
+    answer:
+      "Sprzeciw od oceny okresowej można wnieść do dyrektora generalnego urzędu w ciągu 7 dni od zapoznania się z oceną. Podstawa to art. 83 ust. 1 ustawy o służbie cywilnej.",
+  },
+  {
+    match: (q: string) =>
       /czastkow/.test(q) &&
       /\b1\b|jedynk/.test(q) &&
       /wynik|negatywn|pozytywn/.test(q),

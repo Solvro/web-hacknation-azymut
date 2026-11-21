@@ -158,11 +158,7 @@ async function answerQuestion(
     mode === "conversation"
       ? "rozmowa oceniająca potrzeby rozwoju zadania " + topic
       : topic;
-  if (
-    mode === "formal" &&
-    process.env.AZYMUT_MODEL_URL &&
-    process.env.AZYMUT_MODEL_NAME
-  ) {
+  if (mode === "formal") {
     const answer = formalRuleAnswer(question, scope, knowledge.sources);
     if (answer) return { status: "answered", method: "rule", ...answer };
   }

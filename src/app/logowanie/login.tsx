@@ -11,7 +11,7 @@ export function Login() {
   const [role, setRole] = useState<Role>("supervisor");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [error, setError] = useState("");
   return (
     <main className="login">
       <div className="brand">
@@ -19,26 +19,42 @@ export function Login() {
       </div>
       <h1>Zaloguj się do demo</h1>
       <p className="lead">
-        Wybierz konto demonstracyjne. Po ponownym zalogowaniu w tej przeglądarce
-        wrócisz do tego samego zestawu spraw.
+        Wybierz rolę i wpisz hasło podane w zgłoszeniu lub przez zespół Azymutu.
+        Wszystkie role demonstracyjne korzystają z tego samego hasła.
       </p>
       <section>
         <form
           onSubmit={async (event) => {
             event.preventDefault();
+            if (busy) return;
             setBusy(true);
-            setFailed(false);
+            setError("");
+            let signedIn = false;
             try {
               const result = await auth.signIn.email({
                 email: role + "@azymut.example",
                 password,
               });
-              if (result.error) throw new Error();
+              if (result.error) {
+                setError(
+                  result.error.code === "INVALID_EMAIL_OR_PASSWORD"
+                    ? "Sprawdź hasło demonstracyjne i spróbuj ponownie."
+                    : result.error.status === 429
+                      ? "Za dużo prób logowania. Odczekaj minutę i spróbuj ponownie."
+                      : "Logowanie jest chwilowo niedostępne. Spróbuj ponownie za chwilę.",
+                );
+                return;
+              }
+              signedIn = true;
               const response = await fetch("/api/demo", { method: "POST" });
               if (!response.ok) throw new Error();
               window.location.assign(roleHome(role));
             } catch {
-              setFailed(true);
+              setError(
+                signedIn
+                  ? "Nie udało się otworzyć zestawu spraw demo. Spróbuj ponownie za chwilę."
+                  : "Logowanie jest chwilowo niedostępne. Spróbuj ponownie za chwilę.",
+              );
             } finally {
               setBusy(false);
             }
@@ -48,11 +64,12 @@ export function Login() {
             Konto
             <select
               value={role}
+              disabled={busy}
               onChange={(e) => setRole(e.target.value as Role)}
             >
               {Object.entries(roleLabels).map(([id, label]) => (
                 <option key={id} value={id}>
-                  {label} · {id}@azymut.example
+                  {label}
                 </option>
               ))}
             </select>
@@ -63,6 +80,7 @@ export function Login() {
               required
               type="password"
               autoComplete="current-password"
+              disabled={busy}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -70,11 +88,7 @@ export function Login() {
           <button className="primary" disabled={busy}>
             {busy ? "Logowanie…" : "Zaloguj się"}
           </button>
-          {failed && (
-            <p role="alert">
-              Logowanie się nie powiodło. Sprawdź hasło demonstracyjne.
-            </p>
-          )}
+          {error && <p role="alert">{error}</p>}
         </form>
       </section>
     </main>

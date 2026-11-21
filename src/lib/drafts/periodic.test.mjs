@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { readPeriodicDraft } from "./periodic.ts";
+import { draftStorageKey, periodicStorageKey, readPeriodicDraft, retainPeriodicEvidence } from "./periodic.ts";
 import { periodicCriteria } from "../scoring/periodic.ts";
 
 const keys = periodicCriteria("B", ["analysis"]);
@@ -35,6 +35,35 @@ const restore = (changes) =>
 
 test("odtwarza bieżący wskaźnik, obserwację oraz treść ustaleń", () => {
   assert.deepEqual(restore({}), draft);
+});
+
+test("sprawa szkoleniowa ma osobny zapis w karcie, a istniejące klucze pozostają ważne", () => {
+  assert.equal(periodicStorageKey(), draftStorageKey);
+  assert.equal(periodicStorageKey("konto"), draftStorageKey + ":konto");
+  const keys = [periodicStorageKey(), periodicStorageKey("konto"),
+    periodicStorageKey(undefined, true), periodicStorageKey("konto", true)];
+  assert.equal(new Set(keys).size, keys.length);
+});
+
+test("zmiana kryteriów zostawia szkic możliwy do wznowienia i zachowuje treść notatki", () => {
+  const note = {
+    id: "6a75d8b1-91a7-4184-8819-08b4b62cf03b",
+    text: "Przykład analizy z pracy",
+    indicatorId: "analysis-1",
+    gap: null,
+  };
+  const evidence = retainPeriodicEvidence(model, "B", [], {
+    ...draft,
+    notes: [note],
+    plannedIndicators: ["analysis-1", "leadership-1"],
+    decisions: { analysis: 3, leadership: 7 },
+  });
+  const restored = restore({ ...evidence, extra: [], active: 0 });
+  assert.deepEqual(restored.ratings, {});
+  assert.deepEqual(restored.examples, {});
+  assert.deepEqual(restored.notes, [{ ...note, indicatorId: null, gap: "context" }]);
+  assert.deepEqual(restored.plannedIndicators, ["leadership-1"]);
+  assert.deepEqual(restored.decisions, { leadership: 7 });
 });
 
 test("odrzuca błędne lub niezgodne szkice przed renderowaniem", () => {
