@@ -1,0 +1,13 @@
+.git
+.next
+node_modules
+.pnpm-store
+materials
+data
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+next-env.d.ts
+Dockerfile
+.dockerignore
