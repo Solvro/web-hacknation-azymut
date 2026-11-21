@@ -464,3 +464,15 @@ summary {
   background: #ece8fb;
   border-color: var(--purple);
 }
+
+.login {
+  width: min(520px, calc(100% - 3rem));
+  margin: 3.5rem auto;
+}
+.login input[type="password"] {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.55rem 0.85rem;
+}

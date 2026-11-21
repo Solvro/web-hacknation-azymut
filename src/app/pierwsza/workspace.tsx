@@ -1,5 +1,7 @@
 "use client";
 
+import { Logout } from "../logout";
+
 import { AssistantPanel } from "../assistant-panel";
 
 import Link from "next/link";
@@ -44,7 +46,13 @@ const steps = [
 ];
 const behaviorPoints: Points[] = [1, 3, 5, 7, 9];
 
-export function FirstWorkspace({ model }: { model: CompetencyModel }) {
+export function FirstWorkspace({
+  model,
+  authenticated,
+}: {
+  model: CompetencyModel;
+  authenticated: boolean;
+}) {
   const [step, setStep] = useState(0);
   const [start, setStart] = useState("2026-02-02");
   const [end, setEnd] = useState("2027-02-01");
@@ -101,7 +109,9 @@ export function FirstWorkspace({ model }: { model: CompetencyModel }) {
           <Compass size={32} /> Azymut
         </Link>
         <Link href="/">Ocena okresowa</Link>
-        <span className="demo">Demo przełożonego</span>
+        <span className="demo">
+          {authenticated ? <Logout /> : "Demo przełożonego"}
+        </span>
       </header>
       <p className="desktop-only">
         Otwórz Azymut na komputerze, aby przejść przez ocenę.

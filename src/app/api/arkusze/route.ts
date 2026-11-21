@@ -1,7 +1,10 @@
+import { requireApiRole } from "../../../lib/server/access";
 import { prepareAssessment } from "../../../lib/pdf/assessment";
 import { renderAssessment } from "../../../lib/pdf/render";
 
 export async function POST(request: Request) {
+  const access = await requireApiRole(request, ["supervisor"]);
+  if (access instanceof Response) return access;
   let assessment: ReturnType<typeof prepareAssessment>;
   try {
     const body = await request.text();

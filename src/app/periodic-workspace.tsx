@@ -1,5 +1,7 @@
 "use client";
 
+import { Logout } from "./logout";
+
 import { AssistantPanel } from "./assistant-panel";
 
 import { CriterionSuggestion } from "./criterion-suggestion";
@@ -69,7 +71,13 @@ const levelNames = [
   "Znacznie powyżej oczekiwań",
 ];
 
-export function PeriodicWorkspace({ model }: { model: CompetencyModel }) {
+export function PeriodicWorkspace({
+  model,
+  authenticated,
+}: {
+  model: CompetencyModel;
+  authenticated: boolean;
+}) {
   const [initial, setInitial] = useState<PeriodicDraft | null | undefined>(
     undefined,
   );
@@ -100,6 +108,7 @@ export function PeriodicWorkspace({ model }: { model: CompetencyModel }) {
     <AssessmentEditor
       key={generation}
       model={model}
+      authenticated={authenticated}
       initial={initial}
       notice={notice}
       onRestart={() => {
@@ -123,11 +132,13 @@ function AssessmentEditor({
   model,
   initial,
   notice,
+  authenticated,
   onRestart,
 }: {
   model: CompetencyModel;
   initial: PeriodicDraft | null;
   notice: string;
+  authenticated: boolean;
   onRestart: () => void;
 }) {
   const [form, setForm] = useState<PeriodicForm>(initial?.form ?? "B");
@@ -222,7 +233,9 @@ function AssessmentEditor({
           <Compass aria-hidden="true" size={32} /> Azymut
         </div>
         <Link href="/pierwsza">Pierwsza ocena</Link>
-        <span className="demo">Demo przełożonego</span>
+        <span className="demo">
+          {authenticated ? <Logout /> : "Demo przełożonego"}
+        </span>
       </header>
       <p className="desktop-only">
         Otwórz Azymut na komputerze, aby przejść przez ocenę.

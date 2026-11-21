@@ -13,3 +13,4 @@
 - Dodano ścieżkę pierwszej oceny z terminami, sprawozdaniem, egzaminem, obserwacjami i decyzjami w skali 3/5/7.
 - Dodano serwerowy eksport PDF pierwszej oceny oraz arkuszy B/C, z walidacją danych i ponownym obliczeniem wyniku na serwerze.
 - Asystent zasad i rozmowy korzysta z indeksu lokalnych materiałów i sprawdza wszystkie cytaty przed pokazaniem odpowiedzi. Ekran rozróżnia brak podstawy, niepoprawne cytaty i awarię modelu.
+- Konta demonstracyjne przełożonego, HR i administratora korzystają z Better Auth oraz PostgreSQL. Po zmianie roli przeglądarka zachowuje identyfikator zestawu spraw. Zestawy są odizolowane między sesjami demonstracyjnymi.

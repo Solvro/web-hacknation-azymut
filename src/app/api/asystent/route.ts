@@ -1,3 +1,4 @@
+import { requireApiRole } from "../../../lib/server/access";
 import { faqSources } from "../../../lib/knowledge/faq";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { generateText, Output } from "ai";
@@ -32,6 +33,8 @@ const outputSchema = z.union([
 ]);
 
 export async function POST(request: Request) {
+  const access = await requireApiRole(request, ["supervisor"]);
+  if (access instanceof Response) return access;
   const input = requestSchema.safeParse(await request.json().catch(() => null));
   if (!input.success)
     return Response.json({ status: "invalid" }, { status: 400 });
