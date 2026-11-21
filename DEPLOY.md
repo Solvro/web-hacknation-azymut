@@ -31,8 +31,8 @@ Lokalny zestaw z PostgreSQL uruchamia również `docker compose --env-file .env.
 | `BETTER_AUTH_SECRET` | losowy sekret (np. `openssl rand -hex 32`) |
 | `AZYMUT_DEMO_PASSWORD` | hasło kont demo, co najmniej 12 znaków |
 | `AZYMUT_MODEL_URL`, `AZYMUT_MODEL_NAME` | serwer i model generujący (`/v1`) |
-| `AZYMUT_DISABLE_REASONING`, `AZYMUT_MODEL_TIMEOUT_MS` | opcjonalnie: tryb bez rozumowania dla dostawców, którzy go obsługują, i limit czasu generacji w ms |
-| `AZYMUT_EMBED_URL`, `AZYMUT_EMBED_NAME` | opcjonalnie: model embeddingów (np. `bge-m3`) |
+| `AZYMUT_DISABLE_REASONING`, `AZYMUT_MODEL_TIMEOUT_MS` | opcjonalnie: tryb bez rozumowania dla dostawców, którzy go obsługują (dla `gemma4:12b` wyłączany automatycznie), i limit czasu generacji w ms |
+| `AZYMUT_EMBED_URL`, `AZYMUT_EMBED_NAME` | opcjonalnie: model embeddingów (np. `bge-m3-cpu`) |
 
 ## Coolify (demo hackathonowe)
 
@@ -40,7 +40,7 @@ Lokalny zestaw z PostgreSQL uruchamia również `docker compose --env-file .env.
 - Aplikacja z repo przez GitHub App, build pack `Dockerfile`, port `3000`, healthcheck `GET /logowanie` → 200.
 - Baza: PostgreSQL z obrazem `pgvector/pgvector:pg17`.
 - Dane: katalog na hoście zamontowany tylko do odczytu pod `/app/data`.
-- Model: Ollama na `solvro-stacja`, wołana wyłącznie z sieci wewnętrznej, `gemma4:e4b`.
+- Model: Ollama na `solvro-stacja`, wołana wyłącznie z sieci wewnętrznej, `gemma4:12b`.
 - Automatyczne wdrożenie po pushu jest wyłączone; wdrożenia uruchamiamy ręcznie.
 
 ## Licencje
