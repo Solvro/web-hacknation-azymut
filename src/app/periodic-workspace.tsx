@@ -9,6 +9,8 @@ import { AssistantPanel } from "./assistant-panel";
 import { trainingAssessment } from "../lib/drafts/demo";
 import { CriterionSuggestion } from "./criterion-suggestion";
 import { ObservationInbox } from "./observation-inbox";
+import { PositionPlanner } from "./position-planner";
+import { maxPlannedIndicators } from "../lib/observations/position";
 import { ObservationJournal } from "./observation-journal";
 import { ConversationAgenda } from "./conversation-agenda";
 import { buildConversationAgenda } from "../lib/observations/agenda";
@@ -207,6 +209,8 @@ function AssessmentEditor({
   const [examples, setExamples] = useState<Record<string, string>>(
     initial?.examples ?? {},
   );
+  const [positionDescription, setPositionDescription] = useState(initial?.positionDescription ?? "");
+  const [plannedIndicators, setPlannedIndicators] = useState(initial?.plannedIndicators ?? []);
   const [notes, setNotes] = useState<SavedNote[]>(initial?.notes ?? []);
   const indicatorHeading = useRef<HTMLLegendElement>(null);
   const [decisions, setDecisions] = useState<Decisions>(
@@ -238,6 +242,8 @@ function AssessmentEditor({
     ratings,
     examples,
     notes,
+    positionDescription: positionDescription || undefined,
+    plannedIndicators,
     decisions,
     interview,
     justification,
@@ -284,6 +290,28 @@ function AssessmentEditor({
     setInterview(false);
   }
 
+  function chooseForm(next: PeriodicForm) {
+    if (form === next) return;
+    setForm(next);
+    setMeeting(emptyMeeting);
+    setExtra([]);
+    setActive(0);
+    setIndex(0);
+    setPlannedIndicators([]);
+  }
+
+  function toggleCriterion(criterion: Criterion) {
+    if (extra.includes(criterion)) {
+      setExtra(extra.filter((item) => item !== criterion));
+      setActive(0);
+      setIndex(0);
+      const removed = new Set(model.competencies[criterion].map(({ id }) => id));
+      setPlannedIndicators((previous) => previous.filter((id) => !removed.has(id)));
+    } else if (extra.length < 3) {
+      setExtra([...extra, criterion]);
+    }
+  }
+
   function openIndicator(id: string) {
     const criterionIndex = selected.findIndex((criterion) =>
       model.competencies[criterion].some((item) => item.id === id),
@@ -319,7 +347,7 @@ function AssessmentEditor({
             <FileText size={19} />
             <div>
               <strong>Arkusz {form}</strong>
-              <small>{roles[form].title}</small>
+              <small>{positionDescription ? "Opis stanowiska w sprawie" : roles[form].title}</small>
             </div>
           </div>
           <div className="draft-status">
@@ -361,9 +389,26 @@ function AssessmentEditor({
           {step === 0 && (
             <>
               <p className="lead">
-                Wybierz przykładowy opis stanowiska i ustal kryteria do rozmowy
-                rozpoczynającej.
+                Ustal arkusz i kryteria do rozmowy rozpoczynającej.
               </p>
+              <PositionPlanner
+                model={model}
+                form={form}
+                description={positionDescription}
+                extra={extra}
+                planned={plannedIndicators}
+                onDescription={setPositionDescription}
+                onForm={(next, text) => {
+                  chooseForm(next);
+                  setPositionDescription(text);
+                }}
+                onCriterion={toggleCriterion}
+                onIndicator={(id) => setPlannedIndicators((previous) =>
+                  previous.includes(id)
+                    ? previous.filter((item) => item !== id)
+                    : previous.length < maxPlannedIndicators ? [...previous, id] : previous,
+                )}
+              />
               <div className="role-grid">
                 {(["B", "C"] as const).map((f) => (
                   <button
@@ -371,13 +416,7 @@ function AssessmentEditor({
                     key={f}
                     aria-pressed={f === form}
                     className="role"
-                    onClick={() => {
-                      if (form !== f) {
-                        setForm(f);
-                        setMeeting(emptyMeeting);
-                        setExtra([]);
-                      }
-                    }}
+                    onClick={() => chooseForm(f)}
                   >
                     {f === "B" ? <Users /> : <BriefcaseBusiness />}
                     <span>Arkusz {f}</span>
@@ -417,13 +456,7 @@ function AssessmentEditor({
                           type="checkbox"
                           checked={extra.includes(c)}
                           disabled={!extra.includes(c) && extra.length >= 3}
-                          onChange={(e) =>
-                            setExtra(
-                              e.target.checked
-                                ? [...extra, c]
-                                : extra.filter((x) => x !== c),
-                            )
-                          }
+                          onChange={() => toggleCriterion(c)}
                         />
                         {criteria[c]}
                       </label>
@@ -439,7 +472,7 @@ function AssessmentEditor({
           )}
           {step === 1 && (
             <OpeningMeetingForm
-              duties={roles[form].duties}
+              duties={positionDescription || roles[form].duties}
               criteria={selected.map((c) => criteria[c])}
               meeting={meeting}
               onChange={setMeeting}
@@ -453,6 +486,18 @@ function AssessmentEditor({
                 Wybierz zachowania z modelu MC, które udało się zaobserwować w
                 ocenianym okresie.
               </p>
+              {plannedIndicators.length > 0 && (
+                <section>
+                  <h2>Plan obserwacji ze stanowiska</h2>
+                  <ul className="planned-indicators">
+                    {selected.flatMap((criterion) => model.competencies[criterion])
+                      .filter(({ id }) => plannedIndicators.includes(id))
+                      .map(({ id, label }) => (
+                        <li key={id}><button className="link agenda-indicator-link" onClick={() => openIndicator(id)}>{label}</button></li>
+                      ))}
+                  </ul>
+                </section>
+              )}
               <ObservationInbox
                 model={model}
                 form={form}

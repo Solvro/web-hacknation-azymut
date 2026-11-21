@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { maxSavedNotes, savedNote } from "../observations/notes.ts";
+import { maxPlannedIndicators, positionText } from "../observations/position.ts";
 import {
   criteria,
   periodicCriteria,
@@ -47,6 +48,8 @@ const schema = z.object({
   ),
   examples: z.record(z.string(), z.string()),
   notes: z.array(savedNote).max(maxSavedNotes).optional(),
+  positionDescription: positionText.optional(),
+  plannedIndicators: z.array(z.string().max(80)).max(maxPlannedIndicators).optional(),
   decisions: z.partialRecord(criterion, points.nullable()),
   interview: z.boolean(),
   justification: z.string(),
@@ -78,6 +81,10 @@ export function readPeriodicDraft(
     )
   ) {
     throw new Error("Obserwacja spoza wybranych kryteriów.");
+  }
+  const planned = draft.plannedIndicators ?? [];
+  if (new Set(planned).size !== planned.length || planned.some((id) => !ids.has(id))) {
+    throw new Error("Plan zawiera wskaźnik spoza wybranych kryteriów.");
   }
   const notes = draft.notes ?? [];
   if (

@@ -776,3 +776,21 @@ details.disclosure > p {
 .agenda-example {
   margin-top: 0.4rem;
 }
+.position-used {
+  margin-top: 0.75rem;
+}
+.position-planner .observation-card ul {
+  display: grid;
+  gap: 0.9rem;
+  margin: 0.75rem 0 0;
+}
+.position-planner .observation-original {
+  margin-top: 0.35rem;
+}
+.planned-indicators {
+  display: grid;
+  gap: 0.4rem;
+}
+.position-planner + .role-grid {
+  margin-top: 1rem;
+}
