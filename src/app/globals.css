@@ -404,3 +404,12 @@ summary {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.draft-status {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+.draft-status button {
+  font-size: 0.85rem;
+}

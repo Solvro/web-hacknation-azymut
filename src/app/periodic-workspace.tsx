@@ -5,7 +5,13 @@ import {
   MeetingSummary,
   OpeningMeetingForm,
 } from "./opening-meeting";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  draftStorageKey,
+  readPeriodicDraft,
+  type CompetencyModel,
+  type PeriodicDraft,
+} from "../lib/drafts/periodic";
 import {
   ArrowLeft,
   ArrowRight,
@@ -29,14 +35,6 @@ import type {
   PeriodicForm,
   Points,
 } from "../lib/scoring/periodic";
-
-export interface CompetencyModel {
-  version: string;
-  competencies: Record<
-    Criterion,
-    { id: string; label: string; levels: string[] }[]
-  >;
-}
 
 const roles = {
   B: {
@@ -67,17 +65,121 @@ const levelNames = [
 ];
 
 export function PeriodicWorkspace({ model }: { model: CompetencyModel }) {
-  const [form, setForm] = useState<PeriodicForm>("B");
-  const [extra, setExtra] = useState<Criterion[]>([]);
-  const [step, setStep] = useState(0);
-  const [active, setActive] = useState(0);
-  const [index, setIndex] = useState(0);
-  const [ratings, setRatings] = useState<Record<string, Observation>>({});
-  const [examples, setExamples] = useState<Record<string, string>>({});
-  const [decisions, setDecisions] = useState<Decisions>({});
-  const [interview, setInterview] = useState(false);
-  const [justification, setJustification] = useState("");
-  const [meeting, setMeeting] = useState(emptyMeeting);
+  const [initial, setInitial] = useState<PeriodicDraft | null | undefined>(
+    undefined,
+  );
+  const [notice, setNotice] = useState("");
+  const [generation, setGeneration] = useState(0);
+  useEffect(() => {
+    let raw: string | null;
+    try {
+      raw = sessionStorage.getItem(draftStorageKey);
+    } catch {
+      setNotice("Przeglądarka zablokowała dostęp do szkicu.");
+      setInitial(null);
+      return;
+    }
+    try {
+      setInitial(raw ? readPeriodicDraft(raw, model) : null);
+      if (raw) setNotice("Wznowiono szkic.");
+    } catch {
+      setNotice(
+        "Poprzedni szkic jest uszkodzony lub pochodzi z innej wersji modelu. Otwarto nową ocenę.",
+      );
+      setInitial(null);
+    }
+  }, [model]);
+  if (initial === undefined)
+    return <main aria-busy="true">Otwieranie arkusza…</main>;
+  return (
+    <AssessmentEditor
+      key={generation}
+      model={model}
+      initial={initial}
+      notice={notice}
+      onRestart={() => {
+        if (!window.confirm("Rozpocząć nową ocenę i usunąć szkic z tej karty?"))
+          return;
+        try {
+          sessionStorage.removeItem(draftStorageKey);
+        } catch {
+          setNotice("Nie udało się usunąć szkicu. Spróbuj ponownie.");
+          return;
+        }
+        setInitial(null);
+        setNotice("");
+        setGeneration((value) => value + 1);
+      }}
+    />
+  );
+}
+
+function AssessmentEditor({
+  model,
+  initial,
+  notice,
+  onRestart,
+}: {
+  model: CompetencyModel;
+  initial: PeriodicDraft | null;
+  notice: string;
+  onRestart: () => void;
+}) {
+  const [form, setForm] = useState<PeriodicForm>(initial?.form ?? "B");
+  const [extra, setExtra] = useState<Criterion[]>(initial?.extra ?? []);
+  const [step, setStep] = useState(initial?.step ?? 0);
+  const [active, setActive] = useState(initial?.active ?? 0);
+  const [index, setIndex] = useState(initial?.index ?? 0);
+  const [ratings, setRatings] = useState<Record<string, Observation>>(
+    initial?.ratings ?? {},
+  );
+  const [examples, setExamples] = useState<Record<string, string>>(
+    initial?.examples ?? {},
+  );
+  const [decisions, setDecisions] = useState<Decisions>(
+    initial?.decisions ?? {},
+  );
+  const [interview, setInterview] = useState(initial?.interview ?? false);
+  const [justification, setJustification] = useState(
+    initial?.justification ?? "",
+  );
+  const [meeting, setMeeting] = useState(initial?.meeting ?? emptyMeeting);
+  const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    const draft: PeriodicDraft = {
+      version: model.version,
+      form,
+      extra,
+      step,
+      active,
+      index,
+      ratings,
+      examples,
+      decisions,
+      interview,
+      justification,
+      meeting,
+    };
+    try {
+      sessionStorage.setItem(draftStorageKey, JSON.stringify(draft));
+      setSaved(true);
+    } catch {
+      setSaved(false);
+    }
+  }, [
+    model.version,
+    form,
+    extra,
+    step,
+    active,
+    index,
+    ratings,
+    examples,
+    decisions,
+    interview,
+    justification,
+    meeting,
+  ]);
   const mandatory = periodicCriteria(form);
   const selected = periodicCriteria(form, extra);
   const key = selected[active];
@@ -142,9 +244,15 @@ export function PeriodicWorkspace({ model }: { model: CompetencyModel }) {
               <small>{roles[form].title}</small>
             </div>
           </div>
-          <small>
-            Przykład szkoleniowy. Dane są dostępne do odświeżenia strony.
-          </small>
+          <div className="draft-status">
+            <small role="status">
+              {saved
+                ? "Szkic zapisany w tej karcie."
+                : "Zapis szkicu niedostępny."}
+            </small>
+            {notice && <small>{notice}</small>}
+            <button onClick={onRestart}>Rozpocznij nową ocenę</button>
+          </div>
         </aside>
         <main>
           <div className="context">

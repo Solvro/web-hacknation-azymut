@@ -14,7 +14,7 @@ Otwórz [localhost:3000](http://localhost:3000). Start i budowanie aplikacji imp
 
 ## Zakres tej wersji
 
-Stanowiska i ich obowiązki są syntetyczne. Ocenę przechowuje otwarta strona do jej odświeżenia. Widok podsumowania służy do sprawdzenia wyniku. Zapis szkiców, konta, oficjalne PDF, panel HR i czat są zaplanowane w [koncepcji](CONCEPT.md).
+Stanowiska i ich obowiązki są syntetyczne. Szkic treningowy zapisuje się automatycznie w pamięci sesji karty. Po odświeżeniu wracają wybrany wskaźnik, obserwacje, decyzje i ustalenia rozmowy. Przycisk „Rozpocznij nową ocenę” pozwala usunąć bieżący szkic. Widok podsumowania służy do sprawdzenia wyniku. Zapis spraw na serwerze, konta, oficjalne PDF, panel HR i czat są zaplanowane w [koncepcji](CONCEPT.md).
 
 ## Gdzie użyto AI
 

@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { PeriodicWorkspace, type CompetencyModel } from "./periodic-workspace";
+import { PeriodicWorkspace } from "./periodic-workspace";
+import type { CompetencyModel } from "../lib/drafts/periodic";
 
 export default async function Page() {
   const file = await readFile(
