@@ -1,5 +1,6 @@
 "use client";
 
+import { CaseControls } from "./case-controls";
 import { Logout } from "./logout";
 
 import { AssistantPanel } from "./assistant-panel";
@@ -73,49 +74,75 @@ const levelNames = [
 
 export function PeriodicWorkspace({
   model,
-  authenticated,
+  workspace,
+  remoteDraft,
+  remoteRevision,
+  unread,
 }: {
   model: CompetencyModel;
-  authenticated: boolean;
+  workspace?: string;
+  remoteDraft?: unknown;
+  remoteRevision: number;
+  unread: boolean;
 }) {
   const [initial, setInitial] = useState<PeriodicDraft | null | undefined>(
     undefined,
   );
   const [notice, setNotice] = useState("");
   const [generation, setGeneration] = useState(0);
+  const [revision, setRevision] = useState(remoteRevision);
+  const storageKey = workspace
+    ? draftStorageKey + ":" + workspace
+    : draftStorageKey;
+
   useEffect(() => {
-    let raw: string | null;
-    try {
-      raw = sessionStorage.getItem(draftStorageKey);
-    } catch {
-      setNotice("Przeglądarka zablokowała dostęp do szkicu.");
-      setInitial(null);
-      return;
+    let restored: PeriodicDraft | null = null;
+    if (remoteDraft) {
+      try {
+        restored = readPeriodicDraft(JSON.stringify(remoteDraft), model);
+        setNotice("Wznowiono sprawę z serwera.");
+      } catch {
+        setNotice(
+          "Zapis serwerowy pochodzi z innej wersji modelu lub zawiera niepoprawne dane.",
+        );
+      }
     }
     try {
-      setInitial(raw ? readPeriodicDraft(raw, model) : null);
-      if (raw) setNotice("Wznowiono szkic.");
+      const raw = sessionStorage.getItem(storageKey);
+      if (raw) {
+        const envelope = workspace ? JSON.parse(raw) : null;
+        if (!workspace || envelope.revision === remoteRevision) {
+          restored = readPeriodicDraft(
+            workspace ? JSON.stringify(envelope.draft) : raw,
+            model,
+          );
+          setNotice("Wznowiono szkic.");
+        }
+      }
     } catch {
-      setNotice(
-        "Poprzedni szkic jest uszkodzony lub pochodzi z innej wersji modelu. Otwarto nową ocenę.",
-      );
-      setInitial(null);
+      setNotice("Nie udało się odczytać szkicu z tej karty.");
     }
-  }, [model]);
+    setInitial(restored);
+  }, [model, remoteDraft, remoteRevision, storageKey, workspace]);
+
   if (initial === undefined)
     return <main aria-busy="true">Otwieranie arkusza…</main>;
   return (
     <AssessmentEditor
       key={generation}
       model={model}
-      authenticated={authenticated}
       initial={initial}
       notice={notice}
+      workspace={workspace}
+      unread={unread}
+      storageKey={storageKey}
+      revision={revision}
+      setRevision={setRevision}
       onRestart={() => {
         if (!window.confirm("Rozpocząć nową ocenę i usunąć szkic z tej karty?"))
           return;
         try {
-          sessionStorage.removeItem(draftStorageKey);
+          sessionStorage.removeItem(storageKey);
         } catch {
           setNotice("Nie udało się usunąć szkicu. Spróbuj ponownie.");
           return;
@@ -132,13 +159,21 @@ function AssessmentEditor({
   model,
   initial,
   notice,
-  authenticated,
+  workspace,
+  unread,
+  storageKey,
+  revision,
+  setRevision,
   onRestart,
 }: {
   model: CompetencyModel;
   initial: PeriodicDraft | null;
   notice: string;
-  authenticated: boolean;
+  workspace?: string;
+  unread: boolean;
+  storageKey: string;
+  revision: number;
+  setRevision: (value: number) => void;
   onRestart: () => void;
 }) {
   const [form, setForm] = useState<PeriodicForm>(initial?.form ?? "B");
@@ -164,30 +199,8 @@ function AssessmentEditor({
   );
   const [meeting, setMeeting] = useState(initial?.meeting ?? emptyMeeting);
   const [saved, setSaved] = useState(false);
-  useEffect(() => {
-    const draft: PeriodicDraft = {
-      version: model.version,
-      form,
-      extra,
-      step,
-      active,
-      index,
-      ratings,
-      examples,
-      decisions,
-      interview,
-      justification,
-      developmentNotes,
-      meeting,
-    };
-    try {
-      sessionStorage.setItem(draftStorageKey, JSON.stringify(draft));
-      setSaved(true);
-    } catch {
-      setSaved(false);
-    }
-  }, [
-    model.version,
+  const draft: PeriodicDraft = {
+    version: model.version,
     form,
     extra,
     step,
@@ -200,7 +213,18 @@ function AssessmentEditor({
     justification,
     developmentNotes,
     meeting,
-  ]);
+  };
+  const serializedDraft = JSON.stringify(
+    workspace ? { revision, draft } : draft,
+  );
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(storageKey, serializedDraft);
+      setSaved(true);
+    } catch {
+      setSaved(false);
+    }
+  }, [storageKey, serializedDraft]);
   const mandatory = periodicCriteria(form);
   const selected = periodicCriteria(form, extra);
   const key = selected[active];
@@ -234,7 +258,7 @@ function AssessmentEditor({
         </div>
         <Link href="/pierwsza">Pierwsza ocena</Link>
         <span className="demo">
-          {authenticated ? <Logout /> : "Demo przełożonego"}
+          {workspace ? <Logout /> : "Demo przełożonego"}
         </span>
       </header>
       <p className="desktop-only">
@@ -650,6 +674,15 @@ function AssessmentEditor({
                 </button>
               </div>
             </>
+          )}
+          {workspace && (
+            <CaseControls
+              kind="periodic"
+              revision={revision}
+              setRevision={setRevision}
+              unread={unread}
+              draft={draft}
+            />
           )}
           <AssistantPanel
             scope="periodic"

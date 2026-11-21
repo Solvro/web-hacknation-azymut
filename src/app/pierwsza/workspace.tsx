@@ -1,5 +1,7 @@
 "use client";
 
+import { CaseControls } from "../case-controls";
+import { firstReportStatus, type FirstDraft } from "../../lib/drafts/first";
 import { Logout } from "../logout";
 
 import { AssistantPanel } from "../assistant-panel";
@@ -49,41 +51,75 @@ const behaviorPoints: Points[] = [1, 3, 5, 7, 9];
 export function FirstWorkspace({
   model,
   authenticated,
+  initial,
+  remoteRevision,
+  unread,
+  notice,
 }: {
   model: CompetencyModel;
   authenticated: boolean;
+  initial?: FirstDraft;
+  remoteRevision: number;
+  unread: boolean;
+  notice?: string;
 }) {
-  const [step, setStep] = useState(0);
-  const [start, setStart] = useState("2026-02-02");
-  const [end, setEnd] = useState("2027-02-01");
-  const [replacement, setReplacement] = useState(false);
-  const [agreement, setAgreement] = useState("");
-  const [opening, setOpening] = useState("");
-  const [reportFrom, setReportFrom] = useState("");
-  const [reportDue, setReportDue] = useState("");
-  const [received, setReceived] = useState("");
-  const [overdue, setOverdue] = useState(false);
-  const [exam, setExam] = useState<FirstAssessment["exam"]>();
-  const [active, setActive] = useState(0);
-  const [index, setIndex] = useState(0);
-  const [ratings, setRatings] = useState<Record<string, Observation>>({});
-  const [examples, setExamples] = useState<Record<string, string>>({});
-  const [conversation, setConversation] = useState("");
-  const [decisions, setDecisions] = useState<FirstAssessment["decisions"]>({});
-  const [justification, setJustification] = useState("");
-  const [development, setDevelopment] = useState("");
+  const [step, setStep] = useState(initial?.step ?? 0);
+  const [start, setStart] = useState(initial?.start ?? "2026-02-02");
+  const [end, setEnd] = useState(initial?.end ?? "2027-02-01");
+  const [replacement, setReplacement] = useState(initial?.replacement ?? false);
+  const [agreement, setAgreement] = useState(initial?.agreement ?? "");
+  const [opening, setOpening] = useState(initial?.opening ?? "");
+  const [reportFrom, setReportFrom] = useState(initial?.reportFrom ?? "");
+  const [reportDue, setReportDue] = useState(initial?.reportDue ?? "");
+  const [received, setReceived] = useState(initial?.received ?? "");
+  const [overdue, setOverdue] = useState(initial?.overdue ?? false);
+  const [exam, setExam] = useState<FirstAssessment["exam"]>(initial?.exam);
+  const [active, setActive] = useState(initial?.active ?? 0);
+  const [index, setIndex] = useState(initial?.index ?? 0);
+  const [ratings, setRatings] = useState<Record<string, Observation>>(
+    initial?.ratings ?? {},
+  );
+  const [examples, setExamples] = useState<Record<string, string>>(
+    initial?.examples ?? {},
+  );
+  const [conversation, setConversation] = useState(initial?.conversation ?? "");
+  const [decisions, setDecisions] = useState<FirstAssessment["decisions"]>(
+    initial?.decisions ?? {},
+  );
+  const [justification, setJustification] = useState(
+    initial?.justification ?? "",
+  );
+  const [development, setDevelopment] = useState(initial?.development ?? "");
+
+  const [revision, setRevision] = useState(remoteRevision);
 
   const windowDates =
     start && end && (!replacement || agreement)
       ? firstAssessmentWindow(start, end, replacement ? agreement : start)
       : null;
-  const report = received
-    ? received >= reportFrom && received <= reportDue
-      ? "on_time"
-      : "late"
-    : overdue
-      ? "not_submitted_by_deadline"
-      : null;
+  const report = firstReportStatus(reportFrom, reportDue, received, overdue);
+  const draft: FirstDraft = {
+    version: model.version,
+    step,
+    start,
+    end,
+    replacement,
+    agreement,
+    opening,
+    reportFrom,
+    reportDue,
+    received,
+    overdue,
+    exam,
+    active,
+    index,
+    ratings,
+    examples,
+    conversation,
+    decisions,
+    justification,
+    development,
+  };
   const result = firstResult({ decisions, exam, report });
   const criterion = firstCriteria[active];
   const indicators = model.competencies[criterion];
@@ -130,6 +166,7 @@ export function FirstWorkspace({
         </aside>
         <main>
           <h1>{steps[step]}</h1>
+          {notice && <p role="status">{notice}</p>}
           {step === 0 && (
             <form
               onSubmit={(e) => {
@@ -301,7 +338,7 @@ export function FirstWorkspace({
                     required
                     value={exam ?? ""}
                     onChange={(e) =>
-                      setExam(e.target.value as FirstAssessment["exam"])
+                      setExam((e.target.value || null) as FirstAssessment["exam"])
                     }
                   >
                     <option value="">Wybierz</option>
@@ -581,6 +618,15 @@ export function FirstWorkspace({
                 <button onClick={() => go(3)}>Wróć do decyzji</button>
               </div>
             </>
+          )}
+          {authenticated && (
+            <CaseControls
+              kind="first"
+              revision={revision}
+              setRevision={setRevision}
+              unread={unread}
+              draft={draft}
+            />
           )}
           <AssistantPanel
             scope="first"

@@ -476,3 +476,21 @@ summary {
   border-radius: 8px;
   padding: 0.55rem 0.85rem;
 }
+
+.hr-workspace {
+  max-width: 1060px;
+  margin: 2.5rem auto;
+  padding: 0 1.5rem;
+}
+.hr-workspace th,
+.hr-workspace td {
+  padding: 0.65rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+.hr-workspace table {
+  width: 100%;
+}
+.hr-workspace td small {
+  margin-top: 0.3rem;
+}

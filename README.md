@@ -1,6 +1,6 @@
 # Azymut
 
-Prototyp wspiera przełożonego w służbie cywilnej. W przeglądarce można przejść przez dobór kryteriów arkusza B lub C, rozmowę rozpoczynającą z ustaleniem terminów, wybór obserwowanych zachowań, rozmowę oceniającą, decyzje przełożonego i wnioski do indywidualnego programu rozwoju zawodowego. Pierwsza ocena ma własną ścieżkę, dostępną z nagłówka. Stan tej ścieżki pozostaje w pamięci otwartej strony.
+Prototyp wspiera przełożonego w służbie cywilnej. W przeglądarce można przejść przez dobór kryteriów arkusza B lub C, rozmowę rozpoczynającą z ustaleniem terminów, wybór obserwowanych zachowań, rozmowę oceniającą, decyzje przełożonego i wnioski do indywidualnego programu rozwoju zawodowego. Pierwsza ocena ma własną ścieżkę, dostępną z nagłówka. Po skonfigurowaniu bazy można zapisać sprawę obu ścieżek na serwerze.
 
 ## Uruchomienie
 
@@ -14,7 +14,11 @@ Otwórz [localhost:3000](http://localhost:3000). Start i budowanie aplikacji imp
 
 ## Zakres tej wersji
 
-Stanowiska i ich obowiązki są syntetyczne. Szkic treningowy zapisuje się automatycznie w pamięci sesji karty. Po odświeżeniu wracają wybrany wskaźnik, obserwacje, decyzje i ustalenia rozmowy. Przycisk „Rozpocznij nową ocenę” pozwala usunąć bieżący szkic. Z podsumowania można pobrać arkusz B, C lub pierwszej oceny w PDF z danymi demonstracyjnymi i miejscami na podpis. PDF odwzorowuje główne części wzorów. Wniosek o kolejny stopień służbowy pozostaje poza zakresem eksportu prototypu. Noto Sans jest dołączony na licencji OFL. Zapis spraw na serwerze, konta, panel HR są zaplanowane w [koncepcji](CONCEPT.md).
+Stanowiska i ich obowiązki są syntetyczne. Szkic treningowy zapisuje się automatycznie w pamięci sesji karty. Po odświeżeniu wracają wybrany wskaźnik, obserwacje, decyzje i ustalenia rozmowy. Przycisk „Rozpocznij nową ocenę” pozwala usunąć bieżący szkic. Z podsumowania można pobrać arkusz B, C lub pierwszej oceny w PDF z danymi demonstracyjnymi i miejscami na podpis. PDF odwzorowuje główne części wzorów. Wniosek o kolejny stopień służbowy pozostaje poza zakresem eksportu prototypu. Noto Sans jest dołączony na licencji OFL. W trybie z bazą przełożony zapisuje sprawy, a HR widzi status i termin oraz wysyła przypomnienia. Administrator widzi też dziennik czynności.
+
+## Konta i panel kadr
+
+W `.env.local` ustaw `DATABASE_URL`, `BETTER_AUTH_URL` zgodny z adresem aplikacji, losowy `BETTER_AUTH_SECRET` (minimum 32 znaki) oraz `AZYMUT_DEMO_PASSWORD` (minimum 12 znaków). Uruchom `pnpm db:setup`. Formularz logowania udostępnia trzy fikcyjne konta z jednym skonfigurowanym hasłem. Przycisk „Zmień konto” pozwala wysłać przypomnienie w roli HR i odebrać je jako przełożony w tej samej przeglądarce. Do monitorowania trafiają sprawy po kliknięciu „Zapisz sprawę”. Bez DATABASE_URL dostępny jest lokalny tryb przełożonego.
 
 ## Asystent
 

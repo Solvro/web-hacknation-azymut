@@ -15,6 +15,7 @@ function createAuth() {
     database: getPool(),
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: process.env.BETTER_AUTH_URL,
+    rateLimit: { customRules: { "/sign-in/email": { window: 60, max: 12 } } },
     emailAndPassword: { enabled: true, disableSignUp: true },
     user: {
       additionalFields: {

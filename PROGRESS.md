@@ -14,3 +14,4 @@
 - Dodano serwerowy eksport PDF pierwszej oceny oraz arkuszy B/C, z walidacją danych i ponownym obliczeniem wyniku na serwerze.
 - Asystent zasad i rozmowy korzysta z indeksu lokalnych materiałów i sprawdza wszystkie cytaty przed pokazaniem odpowiedzi. Ekran rozróżnia brak podstawy, niepoprawne cytaty i awarię modelu.
 - Konta demonstracyjne przełożonego, HR i administratora korzystają z Better Auth oraz PostgreSQL. Po zmianie roli przeglądarka zachowuje identyfikator zestawu spraw. Zestawy są odizolowane między sesjami demonstracyjnymi.
+- Sprawy obu ścieżek zapisują się w PostgreSQL z kontrolą wersji. Kadry widzą etapy i terminy oraz wysyłają przypomnienia. Przełożony odbiera je w sprawie, a administrator przegląda dziennik czynności.
