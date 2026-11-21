@@ -310,7 +310,7 @@ legend {
   color: var(--purple);
   margin-bottom: 3px;
 }
-.suggestion,
+.criterion-suggestion,
 .confirm {
   padding: 14px;
   background: #f4f1ff;
@@ -412,4 +412,23 @@ summary {
 }
 .draft-status button {
   font-size: 0.85rem;
+}
+
+.criterion-suggestion summary {
+  color: var(--purple);
+  margin-top: 0.25rem;
+}
+.criterion-suggestion details p {
+  margin: 0.65rem 0;
+}
+.criterion-suggestion dl > div {
+  border-top: 1px solid var(--line);
+  padding: 0.65rem 0;
+}
+.criterion-suggestion dd {
+  color: var(--muted);
+}
+.decision:has(details[open]) {
+  align-items: flex-start;
+  flex-wrap: wrap;
 }

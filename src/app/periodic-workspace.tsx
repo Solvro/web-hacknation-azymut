@@ -1,5 +1,7 @@
 "use client";
 
+import { CriterionSuggestion } from "./criterion-suggestion";
+
 import {
   emptyMeeting,
   MeetingSummary,
@@ -26,7 +28,6 @@ import {
   criteria,
   periodicCriteria,
   periodicResult,
-  suggestPeriodicPoints,
 } from "../lib/scoring/periodic";
 import type {
   Criterion,
@@ -196,15 +197,6 @@ function AssessmentEditor({
     interview &&
     !!developmentNotes.trim() &&
     (result.positive || !!justification.trim());
-
-  function suggest(criterion: Criterion) {
-    return suggestPeriodicPoints(
-      model.competencies[criterion].map(
-        (item) => ratings[item.id] ?? "pending",
-      ),
-    );
-  }
-  const currentSuggestion = suggest(key);
 
   function go(next: number) {
     setStep(next);
@@ -436,16 +428,10 @@ function AssessmentEditor({
                     }}
                   />
                 </label>
-                <p className="suggestion">
-                  Sugestia dla kryterium:{" "}
-                  <strong>
-                    {currentSuggestion.suggestion === null
-                      ? "Za mało obserwacji"
-                      : currentSuggestion.suggestion + " pkt"}
-                  </strong>{" "}
-                  · Zaobserwowane {currentSuggestion.observed} z{" "}
-                  {currentSuggestion.selected}
-                </p>
+                <CriterionSuggestion
+                  indicators={indicators}
+                  ratings={ratings}
+                />
               </section>
               <div className="actions">
                 <button className="primary" onClick={() => go(3)}>
@@ -495,17 +481,14 @@ function AssessmentEditor({
                   Rozmowa oceniająca odbyła się.
                 </label>
                 {selected.map((c) => {
-                  const { suggestion } = suggest(c);
                   return (
                     <div key={c} className="decision">
                       <div>
                         <strong>{criteria[c]}</strong>
-                        <small>
-                          Sugestia:{" "}
-                          {suggestion === null
-                            ? "za mało obserwacji"
-                            : suggestion + " pkt"}
-                        </small>
+                        <CriterionSuggestion
+                          indicators={model.competencies[c]}
+                          ratings={ratings}
+                        />
                       </div>
                       <label>
                         Twoja decyzja
