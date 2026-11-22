@@ -61,4 +61,6 @@ Przyszła integracja z QNT obejmuje import pracownika, stanowiska oraz przypisan
 
 ## Gdzie użyto AI
 
-Claude Code i Codex pomagały opracować koncepcję. Codex pomagał przy implementacji i testach. Model generuje objaśnienia proceduralne na podstawie źródeł, dopasowuje fragmenty OSP i notatek do modelu MC oraz pomaga przygotować pytania do rozmowy. Punktacja i terminy są obliczane deterministycznie. Opisy zachowań pochodzą z materiałów MC.
+**Przy tworzeniu projektu** korzystaliśmy z modeli Claude Opus 5.5 i GPT 6.2 Sol w Monocode. Wspierały opracowanie koncepcji, implementację i testy.
+
+**W aplikacji** Gemma 4 12B generuje objaśnienia proceduralne na podstawie źródeł, dopasowuje fragmenty OSP i notatek do modelu MC oraz pomaga przygotować pytania do rozmowy. Punktacja i terminy są obliczane deterministycznie. Opisy zachowań pochodzą z materiałów MC.
